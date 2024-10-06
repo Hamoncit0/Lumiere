@@ -13,3 +13,14 @@
 .externalNativeBuild
 .cxx
 local.properties
+.idea/misc.xml
+.gradle/file-system.probe
+.gradle/config.properties
+.gradle/buildOutputCleanup/outputFiles.bin
+.gradle/buildOutputCleanup/buildOutputCleanup.lock
+.gradle/8.6/fileHashes/resourceHashesCache.bin
+.gradle/8.6/fileHashes/fileHashes.lock
+.gradle/8.6/fileHashes/fileHashes.bin
+.gradle/8.6/executionHistory/executionHistory.lock
+.gradle/8.6/executionHistory/executionHistory.bin
+local.properties

@@ -59,9 +59,6 @@
             app:layout_constraintTop_toBottomOf="@+id/textView2" />
         <EditText
             android:id="@+id/editTextTextEmailAddress"
-            android:orientation="vertical"
-            app:layout_constraintGuidePercent="0.5"
-            app:layout_constraintGuideBegin="0dp"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_marginStart="32dp"

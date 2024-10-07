@@ -5,6 +5,7 @@
         <solid android:color="@color/background"/>
         <stroke android:color="@color/main_color" android:width="2dp"/>
         <corners android:radius="11dp"/>
+        <padding android:right="11dp"/>
     </shape>
 </item>
 </selector>

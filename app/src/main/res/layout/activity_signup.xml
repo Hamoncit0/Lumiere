@@ -8,7 +8,7 @@
     tools:context=".SignupActivity">
 
     <ImageView
-        android:id="@+id/imageView5"
+        android:id="@+id/postImage"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
@@ -27,14 +27,14 @@
         app:srcCompat="@drawable/gradient_background" />
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/postUsername"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginTop="32dp"
         android:layout_marginEnd="32dp"
         android:fontFamily="@font/heebo_normal"
-        android:text="Log In"
+        android:text="Sign up"
         android:textColor="@color/white"
         android:textFontWeight="700"
 
@@ -52,7 +52,7 @@
         android:background="@drawable/secondary_button_background"
         android:text="Sign Up"
         android:textColor="@color/white"
-        app:layout_constraintBottom_toBottomOf="@+id/imageView5"
+        app:layout_constraintBottom_toBottomOf="@+id/postImage"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -61,7 +61,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         app:layout_constraintBottom_toTopOf="@+id/button5"
-        app:layout_constraintTop_toBottomOf="@+id/textView">
+        app:layout_constraintTop_toBottomOf="@+id/postUsername">
 
         <EditText
             android:id="@+id/editTextText"
@@ -168,7 +168,7 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <TextView
-        android:id="@+id/textView6"
+        android:id="@+id/postDescription"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
@@ -188,9 +188,9 @@
         android:text="@string/log_in"
         android:textFontWeight="700"
         android:textSize="20sp"
-        app:layout_constraintBottom_toBottomOf="@+id/imageView5"
+        app:layout_constraintBottom_toBottomOf="@+id/postImage"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView6" />
+        app:layout_constraintTop_toBottomOf="@+id/postDescription" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

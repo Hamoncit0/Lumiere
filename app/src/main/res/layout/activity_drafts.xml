@@ -2,32 +2,47 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:background="@color/background"
     android:id="@+id/main"
+    android:background="@color/background"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".HomeActivity">
+    tools:context=".DraftsActivity">
 
     <TextView
-        android:id="@+id/textView9"
+        android:id="@+id/textView10"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
+        android:layout_marginStart="32dp"
         android:layout_marginTop="32dp"
         android:layout_marginEnd="32dp"
         android:fontFamily="@font/heebo_normal"
         android:text="Lumière"
+        android:textAlignment="center"
         android:textColor="@color/main_color"
         android:textFontWeight="700"
-        android:textAlignment="center"
-
         android:textSize="48sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <TextView
+        android:id="@+id/textView11"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="32dp"
+        android:text="Your Drafts"
+        android:textAlignment="center"
+        android:textColor="@color/white"
+        android:textFontWeight="700"
+        android:textSize="24sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView10" />
+
     <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
+        android:id="@+id/toolbar2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/black"
@@ -41,39 +56,42 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
+            android:orientation="horizontal"
             android:padding="10dp"
-            android:orientation="horizontal"> <!-- Centra los elementos -->
+            tools:layout_editor_absoluteX="16dp">
 
             <ImageView
-                android:id="@+id/icon1"
+                android:id="@+id/icon6"
                 android:layout_width="70dp"
                 android:layout_height="50dp"
                 android:src="@drawable/home" />
 
             <ImageView
-                android:id="@+id/icon2"
+                android:id="@+id/icon7"
                 android:layout_width="70dp"
                 android:layout_height="50dp"
                 android:src="@drawable/search" />
 
             <ImageView
-                android:id="@+id/icon3"
+                android:id="@+id/icon8"
                 android:layout_width="70dp"
                 android:layout_height="50dp"
                 android:src="@drawable/add" />
 
             <ImageView
-                android:id="@+id/icon4"
+                android:id="@+id/icon9"
                 android:layout_width="70dp"
                 android:layout_height="50dp"
                 android:src="@drawable/draft" />
 
             <ImageView
-                android:id="@+id/icon5"
+                android:id="@+id/icon10"
                 android:layout_width="70dp"
                 android:layout_height="50dp"
                 android:src="@drawable/person" />
         </LinearLayout>
     </androidx.appcompat.widget.Toolbar>
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

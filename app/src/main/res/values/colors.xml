@@ -9,4 +9,6 @@
     <color name="background">#313131</color>
     <color name="backgroundSecondary">#171717</color>
 
+    <color name="dark_gray">#434343</color>
+
 </resources>

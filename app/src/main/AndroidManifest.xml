@@ -13,16 +13,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Lumiere"
         tools:targetApi="31">
-        <activity
-            android:name=".SearchActivity"
-            android:exported="false" />
-        <activity
-            android:name=".DraftsActivity"
-            android:exported="false" />
+
         <activity
             android:name=".HomeActivity"
             android:exported="false" />
-      <activity
+        <activity
             android:name=".EditAccountActivity"
             android:exported="false" />
         <activity

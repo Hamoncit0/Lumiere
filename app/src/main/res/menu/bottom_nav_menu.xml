@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:id="@id/home" android:title="Home" android:icon="@drawable/home" />
+    <item
+        android:id="@+id/home"
+        android:icon="@drawable/home"
+        android:title="Home" />
     <item android:id="@id/add" android:title="Add" android:icon="@drawable/add" />
     <item android:id="@+id/drafts" android:title="Drafts" android:icon="@drawable/draft" />
     <item android:id="@+id/account" android:title="Account" android:icon="@drawable/account_circle" />
+    <item
+        android:id="@+id/search"
+        android:icon="@drawable/search"
+        android:title="Search" />
 </menu>

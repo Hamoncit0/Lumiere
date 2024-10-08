@@ -1,15 +1,12 @@
 package com.example.lumiere
 
+import android.content.Intent
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.RecyclerView
-import com.example.lumiere.Classes.Post
 import com.example.lumiere.Fragments.DraftsFragment
 import com.example.lumiere.Fragments.HomeFragment
+import com.example.lumiere.Fragments.MyAccountFragment
 import com.example.lumiere.Fragments.SearchFragment
 import com.example.lumiere.databinding.ActivityHomeBinding
 
@@ -22,6 +19,7 @@ class HomeActivity : AppCompatActivity() {
         val homeFragment = HomeFragment()
         val draftsFragment = DraftsFragment()
         val searchFragment = SearchFragment()
+        val myAccountFragment = MyAccountFragment()
         // Cargar el fragmento inicial
         makeCurrentFragment(homeFragment)
 
@@ -37,6 +35,16 @@ class HomeActivity : AppCompatActivity() {
                 R.id.search -> {
                     makeCurrentFragment(searchFragment)
                     true
+                }
+
+                R.id.account -> {
+                    makeCurrentFragment(myAccountFragment)
+                    true
+                }
+                R.id.add -> {
+                    val intent = Intent(this, NewPostActivity::class.java)
+                    startActivity(intent)
+                    false
                 }
 
                 R.id.drafts -> {

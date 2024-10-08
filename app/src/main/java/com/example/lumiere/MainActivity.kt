@@ -12,6 +12,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = ActivityMainBinding.inflate(layoutInflater)
+        val signupBtn = binding.button2
+        signupBtn.setOnClickListener { goToSignup() }
         val logInBtn = binding.button
         logInBtn.setOnClickListener { goToLogin() }
         enableEdgeToEdge()
@@ -19,6 +21,10 @@ class MainActivity : AppCompatActivity() {
     }
     fun goToLogin(){
         val intent = Intent(this, LoginActivity::class.java)
+        startActivity(intent)
+    }
+    fun goToSignup(){
+        val intent = Intent(this, SignupActivity::class.java)
         startActivity(intent)
     }
 }

@@ -4,15 +4,15 @@ import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
-import com.example.lumiere.databinding.ActivityEditAccountBinding
+import com.example.lumiere.databinding.ActivityNewPostBinding
 
-class EditAccountActivity : AppCompatActivity() {
+class NewPostActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val binding = ActivityEditAccountBinding.inflate(layoutInflater)
+        val binding = ActivityNewPostBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        val toolbar : Toolbar = binding.editAccountToolbar
+        val toolbar : Toolbar = binding.toolbar2
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         toolbar.setNavigationOnClickListener {

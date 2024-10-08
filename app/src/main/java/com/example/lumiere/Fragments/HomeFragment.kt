@@ -35,6 +35,7 @@ class HomeFragment : Fragment() {
 
         val recyclerView = binding.recyclerViewHome
         recyclerView.adapter = PostAdapter(posts)
+
     }
 
     override fun onDestroyView() {

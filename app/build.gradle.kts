@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    id ("kotlin-parcelize")
 }
 
 android {
@@ -49,4 +50,12 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     implementation("io.coil-kt:coil:2.2.2") //para cargar imagenes de una url
+    //Se agregar librerias para  manejo  consumir la web Api  y manejo de json
+    implementation ("com.squareup.retrofit2:retrofit:2.8.1")
+    implementation ("com.squareup.retrofit2:converter-gson:2.8.1")
+    implementation ("com.google.code.gson:gson:2.8.6")
+    //Esto para generar un interseptor que nos va a permitir desplegar la respuesta del  servicio en el logcat
+    implementation ("com.squareup.okhttp3:okhttp:4.6.0")
+    implementation ("com.squareup.okhttp3:logging-interceptor:4.6.0")
+    //Checar en el android manifest tener lo user permisos
 }

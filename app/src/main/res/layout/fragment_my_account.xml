@@ -58,4 +58,17 @@
         app:layout_constraintTop_toTopOf="parent"
         android:background="@drawable/primary_button_background"
         app:srcCompat="@drawable/edit_account" />
+
+    <ImageButton
+        android:id="@+id/logOutBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/primary_button_background"
+        android:contentDescription="Edit Account"
+        android:padding="12dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/logout" />
 </androidx.constraintlayout.widget.ConstraintLayout>

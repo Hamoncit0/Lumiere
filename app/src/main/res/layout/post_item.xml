@@ -52,12 +52,13 @@
                 app:layout_constraintStart_toStartOf="@+id/postImage"
                 app:layout_constraintTop_toBottomOf="@+id/postUsername" />
 
-            <TextView
-                android:id="@+id/textView8"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <ImageButton
+                android:id="@+id/options"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
                 android:layout_marginTop="8dp"
-                android:drawableLeft="@drawable/more"
+                android:contentDescription="options"
+                android:background="@drawable/more"
                 app:layout_constraintEnd_toEndOf="@+id/postImage"
                 app:layout_constraintTop_toBottomOf="@+id/postImage" />
         </androidx.constraintlayout.widget.ConstraintLayout>

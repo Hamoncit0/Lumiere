@@ -61,5 +61,6 @@ class HomeActivity : AppCompatActivity() {
         supportFragmentManager.beginTransaction().apply {
             replace(R.id.frameLayout, fragment)
             commit()
-        }
+    }
+
 }

@@ -6,13 +6,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.example.lumiere.Models.Post
-import coil.load
 import com.example.lumiere.responseBody.PostRB
 import retrofit2.Call
 import retrofit2.Callback
@@ -23,7 +21,8 @@ class PostAdapter (private val posts : MutableList<Post>, private val currentUse
         val image : ImageView = view.findViewById(R.id.postImage)
         val title : TextView = view.findViewById(R.id.postDescription)
         val username : TextView = view.findViewById(R.id.postUsername)
-        val editButton: ImageButton = view.findViewById(R.id.options)
+        val deleteButton: Button = view.findViewById(R.id.options)
+        val postButton: Button = view.findViewById(R.id.add)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -41,10 +40,16 @@ class PostAdapter (private val posts : MutableList<Post>, private val currentUse
         holder.username.text = item.username ?: "Usuario desconocido"
         // Mostrar botón solo si el usuario es el mismo
         if (item.user_id == currentUser) {
-            holder.editButton.visibility = View.VISIBLE
+            holder.deleteButton.visibility = View.VISIBLE
         } else {
-            holder.editButton.visibility = View.GONE
+            holder.deleteButton.visibility = View.GONE
         }
+        if(item.status == 2){
+            holder.postButton.visibility = View.VISIBLE
+        }else{
+            holder.postButton.visibility = View.GONE
+        }
+
         // Decodifica la imagen desde base64
         val strImage = item.image?.replace("data:image/png;base64,", "")
         if (strImage != null) {
@@ -58,7 +63,7 @@ class PostAdapter (private val posts : MutableList<Post>, private val currentUse
         }
 
         // Configura el clic en el botón de edición
-        holder.editButton.setOnClickListener {
+        holder.deleteButton.setOnClickListener {
             // Crea y muestra el diálogo personalizado
             val dialogView = LayoutInflater.from(holder.itemView.context).inflate(R.layout.dialog_confirm_delete, null)
             val dialogBuilder = androidx.appcompat.app.AlertDialog.Builder(holder.itemView.context)
@@ -72,6 +77,30 @@ class PostAdapter (private val posts : MutableList<Post>, private val currentUse
             dialogView.findViewById<Button>(R.id.okBtnDialog).setOnClickListener {
                 // Confirmación de eliminación
                 deletePost(item.id ?: 0, position, holder)
+                dialogBuilder.dismiss() // Cierra el diálogo
+            }
+
+            dialogBuilder.show()
+        }
+
+        holder.postButton.setOnClickListener {
+            // Crea y muestra el diálogo personalizado
+            val dialogView = LayoutInflater.from(holder.itemView.context).inflate(R.layout.dialog_confirm_delete, null)
+            val dialogBuilder = androidx.appcompat.app.AlertDialog.Builder(holder.itemView.context)
+                .setView(dialogView)
+                .create()
+
+            dialogView.findViewById<TextView>(R.id.textView15).text = "Are you sure you want to publish this post?"
+            dialogView.findViewById<TextView>(R.id.textView14).text = "Post?"
+            dialogView.findViewById<ImageView>(R.id.imageView9).setImageResource(R.drawable.add)
+
+            dialogView.findViewById<Button>(R.id.cancelBtnDialog).setOnClickListener {
+                dialogBuilder.dismiss() // Cierra el diálogo sin hacer nada
+            }
+
+            dialogView.findViewById<Button>(R.id.okBtnDialog).setOnClickListener {
+                // Confirmación de eliminación
+                publishPost(item.id ?: 0, position, holder)
                 dialogBuilder.dismiss() // Cierra el diálogo
             }
 
@@ -97,6 +126,30 @@ class PostAdapter (private val posts : MutableList<Post>, private val currentUse
                     posts.removeAt(position)
                     notifyItemRemoved(position)
                     Toast.makeText(holder.itemView.context, "Publicación eliminada", Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(holder.itemView.context, "Error al eliminar el post", Toast.LENGTH_LONG).show()
+                }
+            }
+        })
+    }
+
+    fun publishPost(postId: Int, position: Int, holder: ViewHolder) {
+        val postToCreate = Post(id = postId, status = 1)
+        val service: Service = RestEngine.getRestEngine().create(Service::class.java)
+        val result: Call<PostRB> = service.updatePostStatus(postToCreate)
+
+        result.enqueue(object : Callback<PostRB> {
+            override fun onFailure(call: Call<PostRB>, t: Throwable) {
+                // Error en la conexión o en la llamada
+                Toast.makeText(holder.itemView.context, "Error: " + t.message, Toast.LENGTH_LONG).show()
+            }
+
+            override fun onResponse(call: Call<PostRB>, response: Response<PostRB>) {
+                if (response.isSuccessful) {
+                    // Eliminar el post en la lista visual solo si la API responde correctamente
+                    posts.removeAt(position)
+                    notifyItemRemoved(position)
+                    Toast.makeText(holder.itemView.context, "Publicación creada", Toast.LENGTH_LONG).show()
                 } else {
                     Toast.makeText(holder.itemView.context, "Error al eliminar el post", Toast.LENGTH_LONG).show()
                 }

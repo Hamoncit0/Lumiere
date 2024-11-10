@@ -1,60 +1,84 @@
 package com.example.lumiere.Fragments
 
+import android.content.Context
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import com.example.lumiere.Models.Post
+import com.example.lumiere.PostAdapter
 import com.example.lumiere.R
+import com.example.lumiere.RestEngine
+import com.example.lumiere.Service
+import com.example.lumiere.databinding.FragmentDraftsBinding
+import com.example.lumiere.databinding.FragmentHomeBinding
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [DraftsFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class DraftsFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+    private var _binding: FragmentDraftsBinding? = null
+    private val binding get() = _binding!!
+    var userId: Int = 0
+    // Lista de álbumes y adaptador para el RecyclerView
+    private lateinit var postList: List<Post>
+    private lateinit var postAdapter: PostAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
+
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_drafts, container, false)
+        _binding = FragmentDraftsBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // Inicializa el RecyclerView y el adaptador
+        val recyclerView = binding.recycleViewDrafts
+
+        val sharedPreferences = requireContext().getSharedPreferences("USER_PREF", AppCompatActivity.MODE_PRIVATE)
+        userId = sharedPreferences.getInt("userId", 0) // null es el valor por defecto
+
+        val emptyMutableList: MutableList<Post> = mutableListOf()
+        postAdapter = PostAdapter(emptyMutableList, userId) // Inicializa con una lista vacía
+        recyclerView.adapter = postAdapter
+
+        // Cargar álbumes desde el servidor
+        getPosts()
+
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment DraftsFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            DraftsFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
+    private fun getPosts() {
+        val sharedPreferences = requireContext().getSharedPreferences("USER_PREF",
+            Context.MODE_PRIVATE
+        )
+        val userId = sharedPreferences.getInt("userId", 0)
+
+        val service: Service = RestEngine.getRestEngine().create(Service::class.java)
+        val result: Call<List<Post>> = service.getPostsByUserId(userId)
+
+        result.enqueue(object : Callback<List<Post>> {
+            override fun onFailure(call: Call<List<Post>>, t: Throwable) {
+                Toast.makeText(requireContext(), "Error: " + t.message, Toast.LENGTH_LONG).show()
             }
+
+            override fun onResponse(call: Call<List<Post>>, response: Response<List<Post>>) {
+                val posts = response.body() ?: emptyList()
+                postList = posts.filter { it.status == 2 } // Filtra los posts con status activo
+                postAdapter = PostAdapter(postList.toMutableList(), userId) // Actualiza el adaptador con los posts cargados
+                binding.recycleViewDrafts.adapter = postAdapter // Asigna el adaptador al RecyclerView
+                Toast.makeText(requireContext(), "drafts cargados", Toast.LENGTH_LONG).show()
+            }
+        })
     }
+
 }

@@ -50,11 +50,36 @@ class NewPostActivity : AppCompatActivity() {
             startActivityForResult(intent, PICK_IMAGE_REQUEST)
         }
         binding.savePostBtn.setOnClickListener {
-            post()
+            if (validatePost())
+            post(1)
         }
     }
+    private fun validatePost(): Boolean {
+        val title = binding.titleETNewPost.text.toString().trim()
+        val selectedCategoryId = binding.spinner2.selectedItemPosition
+        val isImageSelected = imgArray != null
 
-    fun post(){
+        // Verifica que el título no esté vacío
+        if (title.isEmpty()) {
+            Toast.makeText(this, "Por favor, ingresa un título", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        // Verifica que una categoría haya sido seleccionada
+        if (selectedCategoryId == -1 || categoryArray.isEmpty()) {
+            Toast.makeText(this, "Por favor, selecciona una categoría", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        // Verifica que se haya seleccionado una imagen
+        if (!isImageSelected) {
+            Toast.makeText(this, "Por favor, selecciona una imagen", Toast.LENGTH_SHORT).show()
+            return false
+        }
+
+        return true // Si todos los campos están completos, devuelve true
+    }
+    fun post(status:Int){
         // Recuperar el estado de sesión
         val sharedPreferences = getSharedPreferences("USER_PREF", MODE_PRIVATE)
         val isLoggedIn = sharedPreferences.getBoolean("isLoggedIn", false) // false es el valor por defecto
@@ -75,7 +100,7 @@ class NewPostActivity : AppCompatActivity() {
                 selectedCategoryId,
                 strEncodeImage,
                 binding.titleETNewPost.text.toString(),
-                1
+                status
                 )
 
             val service: Service =  RestEngine.getRestEngine().create(Service::class.java)
@@ -136,6 +161,25 @@ class NewPostActivity : AppCompatActivity() {
                 Toast.makeText(this@NewPostActivity, "Categorias cargados", Toast.LENGTH_LONG).show()
             }
         })
+    }
+    override fun onBackPressed() {
+        if (validatePost()) {
+            // Mostrar diálogo si los campos están llenos
+            val builder = android.app.AlertDialog.Builder(this)
+            builder.setMessage("¿Quieres guardar esto como borrador?")
+                .setPositiveButton("Sí") { dialog, _ ->
+                    // Llama a post con estado de borrador
+                    post(2)
+                    dialog.dismiss()
+                }
+                .setNegativeButton("No") { dialog, _ ->
+                    dialog.dismiss()
+                    super.onBackPressed()  // Vuelve a la actividad anterior sin guardar
+                }
+            builder.create().show()
+        } else {
+            super.onBackPressed() // Si no están completos, vuelve normalmente
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

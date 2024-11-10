@@ -12,26 +12,36 @@ import retrofit2.http.*
 interface Service{
 
     //Servicios para consumir el User
-    @GET("posts")
-    fun getPosts():Call<List<Post>>
-
     @GET("Album/Albums/{id}")
     fun getAlbum(@Path("id") id: Int): Call<List<User>>
 
+    ///USERS
     @Headers("Content-Type: application/json")
     @POST("users")
     fun signUp(@Body userData: User):Call<Int>
     @Headers("Content-Type: application/json")
     @POST("users/login")
     fun logIn(@Body userData: User):Call<UserRB>
-    @Headers("Content-Type: application/json")
-    @POST("users/user")
-    fun getUser(@Body email: String):Call<UserRB>
+    @GET("users/user/{userId}")
+    fun getUserById(@Path("userId") userId: Int):Call<UserRB>
+
+    //POSTS
     @Headers("Content-Type: application/json")
     @POST("posts")
     fun savePost(@Body postData: Post):Call<PostRB>
+    @GET("posts")
+    fun getPosts():Call<List<Post>>
+    @GET("posts/post/{userId}")
+    fun getPostsByUserId(@Path("userId") userId: Int): Call<List<Post>>
+    @Headers("Content-Type: application/json")
+    @POST("posts/updatePost")
+    fun updatePostStatus(@Body postData: Post):Call<PostRB>
+
+
+    //CATEGORIES
     @Headers("Content-Type: application/json")
     @GET("categories")
     fun getCategories():Call<List<Category>>
+
 
 }

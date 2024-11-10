@@ -5,14 +5,9 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import com.example.lumiere.Models.Post
 import com.example.lumiere.Models.User
 import com.example.lumiere.databinding.ActivityLoginBinding
-import com.example.lumiere.databinding.FragmentHomeBinding
 import com.example.lumiere.responseBody.UserRB
-import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -47,11 +42,11 @@ class LoginActivity : AppCompatActivity() {
             }
 
             override fun onResponse(call: Call<UserRB>, response: Response<UserRB>) {
-                val userUwU = response.body();
-                val status:String = userUwU?.status.toString()
+                val userRB = response.body();
+                val status:String = userRB?.status.toString()
                 if(status == "success"){
                     Toast.makeText(this@LoginActivity,"Logged in successfully", Toast.LENGTH_LONG).show()
-                    val userId = userUwU?.user?.id ?: 0
+                    val userId = userRB?.user?.id ?: 0
                     // Guardar el estado de sesión
                     val sharedPreferences = getSharedPreferences("USER_PREF", MODE_PRIVATE)
                     val editor = sharedPreferences.edit()

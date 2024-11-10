@@ -41,7 +41,8 @@ class HomeFragment : Fragment() {
         val sharedPreferences = requireContext().getSharedPreferences("USER_PREF", AppCompatActivity.MODE_PRIVATE)
         userId = sharedPreferences.getInt("userId", 0) // null es el valor por defecto
 
-        postAdapter = PostAdapter(emptyList(), userId) // Inicializa con una lista vacía
+        val emptyMutableList: MutableList<Post> = mutableListOf()
+        postAdapter = PostAdapter(emptyMutableList, userId) // Inicializa con una lista vacía
         recyclerView.adapter = postAdapter
 
         // Cargar álbumes desde el servidor
@@ -65,10 +66,10 @@ class HomeFragment : Fragment() {
 
             override fun onResponse(call: Call<List<Post>>, response: Response<List<Post>>) {
                 val posts = response.body() ?: emptyList()
-                postList = posts // Guarda la lista de posts
-                postAdapter = PostAdapter(posts, userId) // Actualiza el adaptador con los posts cargados
+                postList = posts.filter { it.status == 1 } // Filtra los posts con status activo
+                postAdapter = PostAdapter(postList.toMutableList(), userId) // Actualiza el adaptador con los posts cargados
                 binding.recyclerViewHome.adapter = postAdapter // Asigna el adaptador al RecyclerView
-                Toast.makeText(requireContext(), "Álbumes cargados", Toast.LENGTH_LONG).show()
+                Toast.makeText(requireContext(), "Posts cargados", Toast.LENGTH_LONG).show()
             }
         })
     }

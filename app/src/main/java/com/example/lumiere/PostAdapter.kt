@@ -5,14 +5,20 @@ import android.util.Base64
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.example.lumiere.Models.Post
 import coil.load
+import com.example.lumiere.responseBody.PostRB
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
-class PostAdapter (private val posts : List<Post>, private val currentUser: Int ) : RecyclerView.Adapter<PostAdapter.ViewHolder>(){
+class PostAdapter (private val posts : MutableList<Post>, private val currentUser: Int ) : RecyclerView.Adapter<PostAdapter.ViewHolder>(){
     class ViewHolder (view : View) : RecyclerView.ViewHolder(view){
         val image : ImageView = view.findViewById(R.id.postImage)
         val title : TextView = view.findViewById(R.id.postDescription)
@@ -50,5 +56,51 @@ class PostAdapter (private val posts : List<Post>, private val currentUser: Int 
                 e.printStackTrace()
             }
         }
+
+        // Configura el clic en el botón de edición
+        holder.editButton.setOnClickListener {
+            // Crea y muestra el diálogo personalizado
+            val dialogView = LayoutInflater.from(holder.itemView.context).inflate(R.layout.dialog_confirm_delete, null)
+            val dialogBuilder = androidx.appcompat.app.AlertDialog.Builder(holder.itemView.context)
+                .setView(dialogView)
+                .create()
+
+            dialogView.findViewById<Button>(R.id.cancelBtnDialog).setOnClickListener {
+                dialogBuilder.dismiss() // Cierra el diálogo sin hacer nada
+            }
+
+            dialogView.findViewById<Button>(R.id.okBtnDialog).setOnClickListener {
+                // Confirmación de eliminación
+                deletePost(item.id ?: 0, position, holder)
+                dialogBuilder.dismiss() // Cierra el diálogo
+            }
+
+            dialogBuilder.show()
+        }
+    }
+
+    // Función deletePost para eliminar en el backend y actualizar la lista visualmente
+    fun deletePost(postId: Int, position: Int, holder: ViewHolder) {
+        val postToDelete = Post(id = postId, status = 3)
+        val service: Service = RestEngine.getRestEngine().create(Service::class.java)
+        val result: Call<PostRB> = service.updatePostStatus(postToDelete)
+
+        result.enqueue(object : Callback<PostRB> {
+            override fun onFailure(call: Call<PostRB>, t: Throwable) {
+                // Error en la conexión o en la llamada
+                Toast.makeText(holder.itemView.context, "Error: " + t.message, Toast.LENGTH_LONG).show()
+            }
+
+            override fun onResponse(call: Call<PostRB>, response: Response<PostRB>) {
+                if (response.isSuccessful) {
+                    // Eliminar el post en la lista visual solo si la API responde correctamente
+                    posts.removeAt(position)
+                    notifyItemRemoved(position)
+                    Toast.makeText(holder.itemView.context, "Publicación eliminada", Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(holder.itemView.context, "Error al eliminar el post", Toast.LENGTH_LONG).show()
+                }
+            }
+        })
     }
 }

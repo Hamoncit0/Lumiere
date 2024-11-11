@@ -1,5 +1,9 @@
 package com.example.lumiere.Models
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
 data class User(
     var id: Int? = null,
     var first_name: String? = null,
@@ -10,4 +14,4 @@ data class User(
     var status: Int?= null, // 0 para inactivo, 1 para activo  // true para activo, false para inactivo
     var profile_picture: String? = null,
     var createdAt: String? = null
-)
+) : Parcelable

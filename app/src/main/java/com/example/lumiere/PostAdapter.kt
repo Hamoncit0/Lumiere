@@ -9,9 +9,11 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.example.lumiere.Models.Post
 import com.example.lumiere.responseBody.PostRB
+import com.google.gson.Gson
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -125,6 +127,7 @@ class PostAdapter (private val posts : MutableList<Post>, private val currentUse
                     // Eliminar el post en la lista visual solo si la API responde correctamente
                     posts.removeAt(position)
                     notifyItemRemoved(position)
+                    fetchDraftsFromDatabase( holder)
                     Toast.makeText(holder.itemView.context, "Publicación eliminada", Toast.LENGTH_LONG).show()
                 } else {
                     Toast.makeText(holder.itemView.context, "Error al eliminar el post", Toast.LENGTH_LONG).show()
@@ -149,9 +152,45 @@ class PostAdapter (private val posts : MutableList<Post>, private val currentUse
                     // Eliminar el post en la lista visual solo si la API responde correctamente
                     posts.removeAt(position)
                     notifyItemRemoved(position)
+                    fetchDraftsFromDatabase(holder)
                     Toast.makeText(holder.itemView.context, "Publicación creada", Toast.LENGTH_LONG).show()
                 } else {
                     Toast.makeText(holder.itemView.context, "Error al eliminar el post", Toast.LENGTH_LONG).show()
+                }
+            }
+        })
+    }
+    private fun fetchDraftsFromDatabase(holder: ViewHolder) {
+        val userId = currentUser
+        val service: Service = RestEngine.getRestEngine().create(Service::class.java)
+        val result: Call<List<Post>> = service.getPostsByUserId(userId) // Este endpoint debería devolver todos los borradores del usuario
+
+        result.enqueue(object : Callback<List<Post>> {
+            override fun onFailure(call: Call<List<Post>>, t: Throwable) {
+                Toast.makeText(holder.itemView.context, "Error al obtener borradores: ${t.message}", Toast.LENGTH_LONG).show()
+            }
+
+            override fun onResponse(call: Call<List<Post>>, response: Response<List<Post>>) {
+                if (response.isSuccessful) {
+                    val drafts = response.body()?: emptyList()
+
+                    var draftsArray: List<Post> = emptyList()
+                    draftsArray = drafts.filter { it.status == 2 }
+
+                    val sharedPreferences = holder.itemView.context.getSharedPreferences("LOCAL_STORAGE",
+                        AppCompatActivity.MODE_PRIVATE
+                    )
+                    val editor = sharedPreferences.edit()
+
+                    // Convierte el array a JSON
+                    val gson = Gson()
+                    val jsonDrafts = gson.toJson(draftsArray) // draftsArray es el ArrayList<Post> de borradores
+
+                    // Guarda el JSON en SharedPreferences
+                    editor.putString("drafts", jsonDrafts)
+                    editor.apply()
+
+                    Toast.makeText(holder.itemView.context, "Borradores cargados correctamente", Toast.LENGTH_SHORT).show()
                 }
             }
         })

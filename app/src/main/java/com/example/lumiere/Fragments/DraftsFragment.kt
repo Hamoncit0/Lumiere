@@ -1,6 +1,9 @@
 package com.example.lumiere.Fragments
 
 import android.content.Context
+import android.content.Context.MODE_PRIVATE
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -15,6 +18,8 @@ import com.example.lumiere.RestEngine
 import com.example.lumiere.Service
 import com.example.lumiere.databinding.FragmentDraftsBinding
 import com.example.lumiere.databinding.FragmentHomeBinding
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -26,7 +31,7 @@ class DraftsFragment : Fragment() {
     // Lista de álbumes y adaptador para el RecyclerView
     private lateinit var postList: List<Post>
     private lateinit var postAdapter: PostAdapter
-
+    var draftsArray: List<Post> = emptyList()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -53,7 +58,15 @@ class DraftsFragment : Fragment() {
         recyclerView.adapter = postAdapter
 
         // Cargar álbumes desde el servidor
-        getPosts()
+        if(isInternetAvailable(requireContext())) {
+            getPosts()
+        } else {
+            loadDraftsLocally()
+            postAdapter = PostAdapter(draftsArray.toMutableList(), userId) // Actualiza el adaptador con los borradores locales
+            binding.recycleViewDrafts.adapter = postAdapter // Asigna el adaptador al RecyclerView
+            Toast.makeText(requireContext(), "Cargando drafts locales", Toast.LENGTH_LONG).show()
+
+        }
 
     }
 
@@ -79,6 +92,29 @@ class DraftsFragment : Fragment() {
                 Toast.makeText(requireContext(), "drafts cargados", Toast.LENGTH_LONG).show()
             }
         })
+    }
+    private fun loadDraftsLocally() {
+        val sharedPreferences = requireContext().getSharedPreferences("LOCAL_STORAGE", MODE_PRIVATE)
+        val gson = Gson()
+
+        // Lee el JSON de borradores
+        val jsonDrafts = sharedPreferences.getString("drafts", null)
+
+        // Verifica si hay datos guardados
+        if (jsonDrafts != null) {
+            // Convierte el JSON a ArrayList<Post>
+            val type = object : TypeToken<ArrayList<Post>>() {}.type
+            draftsArray = gson.fromJson(jsonDrafts, type)
+        } else {
+            draftsArray = ArrayList() // Si no hay datos, inicializa una lista vacía
+        }
+    }
+
+    fun isInternetAvailable(context: Context): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val activeNetwork = connectivityManager.activeNetwork
+        val networkCapabilities = connectivityManager.getNetworkCapabilities(activeNetwork)
+        return networkCapabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
     }
 
 }

@@ -18,6 +18,7 @@ import com.example.lumiere.databinding.ActivityNewPostBinding
 import com.example.lumiere.databinding.DialogSuccessBinding
 import com.example.lumiere.responseBody.PostRB
 import com.example.lumiere.responseBody.UserRB
+import com.google.gson.Gson
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -29,6 +30,7 @@ class NewPostActivity : AppCompatActivity() {
     lateinit var binding: ActivityNewPostBinding
     var imgArray:ByteArray? =  null
     var categoryArray: List<Category> = emptyList()
+    private var draftsArray: List<Post> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -113,7 +115,9 @@ class NewPostActivity : AppCompatActivity() {
 
                 override fun onResponse(call: Call<PostRB>, response: Response<PostRB>) {
                     //Toast.makeText(this@SaveAlbumActivity,"OK", Toast.LENGTH_LONG).show()
-
+                    if (status == 2) { // Si es un borrador
+                        fetchDraftsFromDatabase(userId) // Actualiza el array de borradores
+                    }
                     // Limpiar los campos después de guardar
                     binding.titleETNewPost.text.clear()
                     binding.imageViewNewPost.setImageResource(R.drawable.ic_menu_camera)  // Reemplaza con una imagen de placeholder
@@ -205,5 +209,37 @@ class NewPostActivity : AppCompatActivity() {
     // Constante para identificar la solicitud de selección de imagen
     companion object {
         const val PICK_IMAGE_REQUEST = 1
+    }
+
+    private fun fetchDraftsFromDatabase(userId: Int) {
+        val service: Service = RestEngine.getRestEngine().create(Service::class.java)
+        val result: Call<List<Post>> = service.getPostsByUserId(userId) // Este endpoint debería devolver todos los borradores del usuario
+
+        result.enqueue(object : Callback<List<Post>> {
+            override fun onFailure(call: Call<List<Post>>, t: Throwable) {
+                Toast.makeText(this@NewPostActivity, "Error al obtener borradores: ${t.message}", Toast.LENGTH_LONG).show()
+            }
+
+            override fun onResponse(call: Call<List<Post>>, response: Response<List<Post>>) {
+                if (response.isSuccessful) {
+                    val drafts = response.body()?: emptyList()
+                    val filteredDrafts = drafts.filter { it.status == 2 }
+                    draftsArray = ArrayList(filteredDrafts)
+
+                    val sharedPreferences = getSharedPreferences("LOCAL_STORAGE", MODE_PRIVATE)
+                    val editor = sharedPreferences.edit()
+
+                    // Convierte el array a JSON
+                    val gson = Gson()
+                    val jsonDrafts = gson.toJson(draftsArray) // draftsArray es el ArrayList<Post> de borradores
+
+                    // Guarda el JSON en SharedPreferences
+                    editor.putString("drafts", jsonDrafts)
+                    editor.apply()
+
+                    Toast.makeText(this@NewPostActivity, "Borradores cargados correctamente", Toast.LENGTH_SHORT).show()
+                }
+            }
+        })
     }
 }

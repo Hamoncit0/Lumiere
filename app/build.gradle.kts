@@ -57,5 +57,7 @@ dependencies {
     //Esto para generar un interseptor que nos va a permitir desplegar la respuesta del  servicio en el logcat
     implementation ("com.squareup.okhttp3:okhttp:4.6.0")
     implementation ("com.squareup.okhttp3:logging-interceptor:4.6.0")
-    //Checar en el android manifest tener lo user permisos
+    //para pasar un array a json y guardarlo en sharedPreferences
+    implementation ("com.google.code.gson:gson:2.8.8")
+
 }

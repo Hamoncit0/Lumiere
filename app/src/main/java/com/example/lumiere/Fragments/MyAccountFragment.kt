@@ -126,6 +126,7 @@ class MyAccountFragment : Fragment() {
                         Toast.makeText(requireContext(),"Information loaded successfully", Toast.LENGTH_SHORT).show()
                         //val image = userRB?.user?.profile_picture
                         binding.textView.text = userRB?.user?.username
+
                         // Decodifica la imagen desde base64
                         val strImage = userRB?.user?.profile_picture?.replace("data:image/png;base64,", "")
                         if (strImage != null) {

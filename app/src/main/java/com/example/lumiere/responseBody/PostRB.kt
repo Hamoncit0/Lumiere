@@ -6,5 +6,6 @@ import com.example.lumiere.Models.User
 data class PostRB (
     var message: String ?= null,
     var status: String ?= null,
-    var post: Post?= null
+    var post: Post?= null,
+    var list: List<Post> ?= null
 )

@@ -39,6 +39,9 @@ interface Service{
     @Headers("Content-Type: application/json")
     @POST("posts/updatePost")
     fun updatePostStatus(@Body postData: Post):Call<PostRB>
+    @Headers("Content-Type: application/json")
+    @POST("posts/advancedSearch")
+    fun advancedSearch(@Body postData: Post):Call<PostRB>
 
 
     //CATEGORIES

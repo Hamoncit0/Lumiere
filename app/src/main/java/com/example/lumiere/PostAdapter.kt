@@ -1,5 +1,7 @@
 package com.example.lumiere
 
+import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.graphics.BitmapFactory
 import android.util.Base64
 import android.view.LayoutInflater
@@ -14,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.lumiere.Models.Post
 import com.example.lumiere.responseBody.PostRB
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -112,87 +115,111 @@ class PostAdapter (private val posts : MutableList<Post>, private val currentUse
 
     // Función deletePost para eliminar en el backend y actualizar la lista visualmente
     fun deletePost(postId: Int, position: Int, holder: ViewHolder) {
-        val postToDelete = Post(id = postId, status = 3)
-        val service: Service = RestEngine.getRestEngine().create(Service::class.java)
-        val result: Call<PostRB> = service.updatePostStatus(postToDelete)
+        if(postId != 0){
+            //si el post existe su id sera diferente de 0 entonces nada mas le cambiara el status
+            val postToDelete = Post(id = postId, status = 3)
+            val service: Service = RestEngine.getRestEngine().create(Service::class.java)
+            val result: Call<PostRB> = service.updatePostStatus(postToDelete)
 
-        result.enqueue(object : Callback<PostRB> {
-            override fun onFailure(call: Call<PostRB>, t: Throwable) {
-                // Error en la conexión o en la llamada
-                Toast.makeText(holder.itemView.context, "Error: " + t.message, Toast.LENGTH_LONG).show()
-            }
-
-            override fun onResponse(call: Call<PostRB>, response: Response<PostRB>) {
-                if (response.isSuccessful) {
-                    // Eliminar el post en la lista visual solo si la API responde correctamente
-                    posts.removeAt(position)
-                    notifyItemRemoved(position)
-                    fetchDraftsFromDatabase( holder)
-                    Toast.makeText(holder.itemView.context, "Publicación eliminada", Toast.LENGTH_LONG).show()
-                } else {
-                    Toast.makeText(holder.itemView.context, "Error al eliminar el post", Toast.LENGTH_LONG).show()
+            result.enqueue(object : Callback<PostRB> {
+                override fun onFailure(call: Call<PostRB>, t: Throwable) {
+                    // Error en la conexión o en la llamada
+                    Toast.makeText(holder.itemView.context, "Error: " + t.message, Toast.LENGTH_LONG).show()
                 }
-            }
-        })
+
+                override fun onResponse(call: Call<PostRB>, response: Response<PostRB>) {
+                    if (response.isSuccessful) {
+                        // Eliminar el post en la lista visual y de los borradores locales solo si la API responde correctamente
+                        if(posts[position].status == 2){
+                            removeDraftFromArray(position, holder)
+                        }else{
+                            posts.removeAt(position)
+                            notifyItemRemoved(position)
+                        }
+                        Toast.makeText(holder.itemView.context, "Borrador eliminado", Toast.LENGTH_LONG).show()
+                    } else {
+                        Toast.makeText(holder.itemView.context, "Error al eliminar el post", Toast.LENGTH_LONG).show()
+                    }
+                }
+            })
+        }
+        else{
+            // Eliminar del array de borradores
+            removeDraftFromArray(position, holder)
+            Toast.makeText(holder.itemView.context, "Borrador eliminado", Toast.LENGTH_LONG).show()
+        }
+
     }
 
     fun publishPost(postId: Int, position: Int, holder: ViewHolder) {
-        val postToCreate = Post(id = postId, status = 1)
-        val service: Service = RestEngine.getRestEngine().create(Service::class.java)
-        val result: Call<PostRB> = service.updatePostStatus(postToCreate)
 
-        result.enqueue(object : Callback<PostRB> {
-            override fun onFailure(call: Call<PostRB>, t: Throwable) {
-                // Error en la conexión o en la llamada
-                Toast.makeText(holder.itemView.context, "Error: " + t.message, Toast.LENGTH_LONG).show()
-            }
+        if(postId != 0){
+            //si el post existe su id sera diferente de 0 entonces nada mas le cambiara el status
+            val postToCreate = Post(id = postId, status = 1)
+            val service: Service = RestEngine.getRestEngine().create(Service::class.java)
+            val result: Call<PostRB> = service.updatePostStatus(postToCreate)
 
-            override fun onResponse(call: Call<PostRB>, response: Response<PostRB>) {
-                if (response.isSuccessful) {
-                    // Eliminar el post en la lista visual solo si la API responde correctamente
-                    posts.removeAt(position)
-                    notifyItemRemoved(position)
-                    fetchDraftsFromDatabase(holder)
-                    Toast.makeText(holder.itemView.context, "Publicación creada", Toast.LENGTH_LONG).show()
-                } else {
-                    Toast.makeText(holder.itemView.context, "Error al eliminar el post", Toast.LENGTH_LONG).show()
+            result.enqueue(object : Callback<PostRB> {
+                override fun onFailure(call: Call<PostRB>, t: Throwable) {
+                    // Error en la conexión o en la llamada
+                    Toast.makeText(holder.itemView.context, "Error: " + t.message, Toast.LENGTH_LONG).show()
                 }
-            }
-        })
-    }
-    private fun fetchDraftsFromDatabase(holder: ViewHolder) {
-        val userId = currentUser
-        val service: Service = RestEngine.getRestEngine().create(Service::class.java)
-        val result: Call<List<Post>> = service.getPostsByUserId(userId) // Este endpoint debería devolver todos los borradores del usuario
 
-        result.enqueue(object : Callback<List<Post>> {
-            override fun onFailure(call: Call<List<Post>>, t: Throwable) {
-                Toast.makeText(holder.itemView.context, "Error al obtener borradores: ${t.message}", Toast.LENGTH_LONG).show()
-            }
-
-            override fun onResponse(call: Call<List<Post>>, response: Response<List<Post>>) {
-                if (response.isSuccessful) {
-                    val drafts = response.body()?: emptyList()
-
-                    var draftsArray: List<Post> = emptyList()
-                    draftsArray = drafts.filter { it.status == 2 }
-
-                    val sharedPreferences = holder.itemView.context.getSharedPreferences("LOCAL_STORAGE",
-                        AppCompatActivity.MODE_PRIVATE
-                    )
-                    val editor = sharedPreferences.edit()
-
-                    // Convierte el array a JSON
-                    val gson = Gson()
-                    val jsonDrafts = gson.toJson(draftsArray) // draftsArray es el ArrayList<Post> de borradores
-
-                    // Guarda el JSON en SharedPreferences
-                    editor.putString("drafts", jsonDrafts)
-                    editor.apply()
-
-                    Toast.makeText(holder.itemView.context, "Borradores cargados correctamente", Toast.LENGTH_SHORT).show()
+                override fun onResponse(call: Call<PostRB>, response: Response<PostRB>) {
+                    if (response.isSuccessful) {
+                        if(posts[position].status == 2){
+                            removeDraftFromArray(position, holder)
+                        }
+                        Toast.makeText(holder.itemView.context, "Publicación creada", Toast.LENGTH_LONG).show()
+                    } else {
+                        Toast.makeText(holder.itemView.context, "Error al crear el post", Toast.LENGTH_LONG).show()
+                    }
                 }
-            }
-        })
+            })
+        }
+        else{
+            //si el post no existe su id sera 0 entonces lo guardamos en la base de datos
+            val postToCreate = posts[position]
+            postToCreate.status = 1
+            val service: Service = RestEngine.getRestEngine().create(Service::class.java)
+            val result: Call<PostRB> = service.savePost(postToCreate)
+
+            result.enqueue(object : Callback<PostRB> {
+                override fun onFailure(call: Call<PostRB>, t: Throwable) {
+                    // Error en la conexión o en la llamada
+                    Toast.makeText(holder.itemView.context, "Error: " + t.message, Toast.LENGTH_LONG).show()
+                }
+
+                override fun onResponse(call: Call<PostRB>, response: Response<PostRB>) {
+                    if (response.isSuccessful) {
+                        // Eliminar el post en la lista visual solo si la API responde correctamente
+                        removeDraftFromArray(position, holder)
+                        Toast.makeText(holder.itemView.context, "Publicación creada", Toast.LENGTH_LONG).show()
+                    } else {
+                        Toast.makeText(holder.itemView.context, "Error al eliminar el post", Toast.LENGTH_LONG).show()
+                    }
+                }
+            })
+        }
+
     }
+
+    private fun removeDraftFromArray(position: Int, holder: ViewHolder) {
+        // Eliminar del array de borradores
+        (posts as MutableList).removeAt(position)
+        notifyItemRemoved(position) // Actualiza la lista visual
+
+        // Guardar el array actualizado en SharedPreferences
+        saveDraftsToSharedPreferences(holder)
+    }
+    fun saveDraftsToSharedPreferences(holder: ViewHolder) {
+        val sharedPreferences = holder.itemView.context.getSharedPreferences("LOCAL_STORAGE", MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        val gson = Gson()
+        val jsonDrafts = gson.toJson(posts) // Convierte el array a JSON
+        editor.putString("drafts", jsonDrafts)
+        editor.apply()
+    }
+
+
 }

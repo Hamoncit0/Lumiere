@@ -1,6 +1,9 @@
 package com.example.lumiere
 
+import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -52,6 +55,8 @@ class LoginActivity : AppCompatActivity() {
                     val editor = sharedPreferences.edit()
                     editor.putBoolean("isLoggedIn", true)
                     editor.putInt("userId", userId)  // Puedes almacenar otros datos si es necesario
+                    editor.putString("username", userRB?.user?.username)
+                    editor.putString("profilePicture", userRB?.user?.profile_picture)
                     editor.apply()
 
                     val intent = Intent(this@LoginActivity, HomeActivity::class.java)
@@ -63,4 +68,5 @@ class LoginActivity : AppCompatActivity() {
             }
         })
     }
+
 }

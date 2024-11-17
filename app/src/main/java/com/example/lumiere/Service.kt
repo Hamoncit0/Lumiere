@@ -18,7 +18,7 @@ interface Service{
     ///USERS
     @Headers("Content-Type: application/json")
     @POST("users")
-    fun signUp(@Body userData: User):Call<Int>
+    fun signUp(@Body userData: User):Call<UserRB>
     @Headers("Content-Type: application/json")
     @POST("users/login")
     fun logIn(@Body userData: User):Call<UserRB>
@@ -35,7 +35,7 @@ interface Service{
     @GET("posts")
     fun getPosts():Call<List<Post>>
     @GET("posts/post/{userId}")
-    fun getPostsByUserId(@Path("userId") userId: Int): Call<List<Post>>
+    fun getPostsByUserId(@Path("userId") userId: Int): Call<PostRB>
     @Headers("Content-Type: application/json")
     @POST("posts/updatePost")
     fun updatePostStatus(@Body postData: Post):Call<PostRB>

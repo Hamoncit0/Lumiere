@@ -2,9 +2,12 @@ package com.example.lumiere
 
 import android.R
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.Toast
@@ -30,7 +33,8 @@ class NewPostActivity : AppCompatActivity() {
     lateinit var binding: ActivityNewPostBinding
     var imgArray:ByteArray? =  null
     var categoryArray: List<Category> = emptyList()
-    private var draftsArray: List<Post> = emptyList()
+    private var draftsArray: MutableList<Post> = mutableListOf()
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -87,85 +91,154 @@ class NewPostActivity : AppCompatActivity() {
         val isLoggedIn = sharedPreferences.getBoolean("isLoggedIn", false) // false es el valor por defecto
         val userId = sharedPreferences.getInt("userId", 0) // null es el valor por defecto
 
-        if (isLoggedIn && userId != 0) {
+        if(isInternetAvailable(this)){
+            //Si esta conectado a internet hacer el procedimiento normal
+            if (isLoggedIn && userId != 0) {
 
+                val encodedString: String = Base64.getEncoder().encodeToString(this.imgArray)
+
+                val strEncodeImage:String = "data:image/png;base64," + encodedString
+
+                val selectedPosition = binding.spinner2.selectedItemPosition
+                val selectedCategoryId = categoryArray.getOrNull(selectedPosition)?.id ?: 0
+                //SE CONSTRUYE EL OBJECTO A ENVIAR,  ESTO DEPENDE DE COMO CONSTRUYAS EL SERVICIO
+                // SI TU SERVICIO POST REQUIERE DOS PARAMETROS HACER UN OBJECTO CON ESOS DOS PARAMETROS
+                val album = Post(0,
+                    userId,
+                    selectedCategoryId,
+                    strEncodeImage,
+                    binding.titleETNewPost.text.toString(),
+                    status
+                )
+
+                val service: Service =  RestEngine.getRestEngine().create(Service::class.java)
+                val result: Call<PostRB> = service.savePost(album)
+
+                result.enqueue(object: Callback<PostRB> {
+                    override fun onFailure(call: Call<PostRB>, t: Throwable) {
+                        Toast.makeText(this@NewPostActivity,"Error" + t.message, Toast.LENGTH_LONG).show()
+                    }
+
+                    override fun onResponse(call: Call<PostRB>, response: Response<PostRB>) {
+                        val postrb = response.body()
+                        //Toast.makeText(this@SaveAlbumActivity,"OK", Toast.LENGTH_LONG).show()
+                        if (status == 2) { // Si es un borrador
+                            album.id = postrb?.postId ?: 0
+                            //fetchDraftsFromDatabase(userId) // Actualiza el array de borradores
+                            loadDraftsFromSharedPreferences()
+                            draftsArray.add(album)
+                            // Guarda los borradores en SharedPreferences
+                            val sharedPreferences = getSharedPreferences("LOCAL_STORAGE", MODE_PRIVATE)
+                            val editor = sharedPreferences.edit()
+
+                            // Convierte el array actualizado a JSON
+                            val gson = Gson()
+                            val jsonDrafts = gson.toJson(draftsArray)
+
+                            // Guarda el JSON en SharedPreferences
+                            editor.putString("drafts", jsonDrafts)
+                            editor.apply()
+
+                        }
+                        // Limpiar los campos después de guardar
+                        binding.titleETNewPost.text.clear()
+                        binding.imageViewNewPost.setImageResource(R.drawable.ic_menu_camera)  // Reemplaza con una imagen de placeholder
+                        imgArray = null
+
+                        // Inflar el layout del diálogo usando binding
+                        val dialogBinding = DialogSuccessBinding.inflate(layoutInflater)
+
+                        // Crear el AlertDialog con el layout inflado
+                        val builder = android.app.AlertDialog.Builder(this@NewPostActivity)
+                        builder.setView(dialogBinding.root)
+
+                        val dialog = builder.create()
+
+                        // Configurar el botón "OK" para cerrar el diálogo y regresar a la actividad anterior
+                        dialogBinding.okBtnDialog.setOnClickListener {
+                            dialog.dismiss()
+                            finish() // Vuelve a la actividad anterior
+                        }
+
+                        // Mostrar el diálogo
+                        dialog.show()
+                    }
+                })
+            }
+        }
+
+        else{
+
+            //agregar el post al array de borradores
             val encodedString: String = Base64.getEncoder().encodeToString(this.imgArray)
 
             val strEncodeImage:String = "data:image/png;base64," + encodedString
 
             val selectedPosition = binding.spinner2.selectedItemPosition
             val selectedCategoryId = categoryArray.getOrNull(selectedPosition)?.id ?: 0
-            //SE CONSTRUYE EL OBJECTO A ENVIAR,  ESTO DEPENDE DE COMO CONSTRUYAS EL SERVICIO
-            // SI TU SERVICIO POST REQUIERE DOS PARAMETROS HACER UN OBJECTO CON ESOS DOS PARAMETROS
+
             val album = Post(0,
                 userId,
                 selectedCategoryId,
                 strEncodeImage,
                 binding.titleETNewPost.text.toString(),
                 status
-                )
+            )
+            loadDraftsFromSharedPreferences()
+            draftsArray.add(album)
+            // Guarda los borradores en SharedPreferences
+            val sharedPreferences = getSharedPreferences("LOCAL_STORAGE", MODE_PRIVATE)
+            val editor = sharedPreferences.edit()
 
-            val service: Service =  RestEngine.getRestEngine().create(Service::class.java)
-            val result: Call<PostRB> = service.savePost(album)
+            // Convierte el array actualizado a JSON
+            val gson = Gson()
+            val jsonDrafts = gson.toJson(draftsArray)
 
-            result.enqueue(object: Callback<PostRB> {
-                override fun onFailure(call: Call<PostRB>, t: Throwable) {
-                    Toast.makeText(this@NewPostActivity,"Error" + t.message, Toast.LENGTH_LONG).show()
+            // Guarda el JSON en SharedPreferences
+            editor.putString("drafts", jsonDrafts)
+            editor.apply()
+
+            Toast.makeText(this, "Borrador guardado localmente", Toast.LENGTH_SHORT).show()
+            finish() // Vuelve a la actividad anterior
+
+        }
+
+    }
+
+    fun getCategories() {
+        if (isInternetAvailable(this)) {
+            // Si hay internet, realiza la solicitud a la API
+            val service: Service = RestEngine.getRestEngine().create(Service::class.java)
+            val result: Call<List<Category>> = service.getCategories()
+
+            result.enqueue(object : Callback<List<Category>> {
+                override fun onFailure(call: Call<List<Category>>, t: Throwable) {
+                    Toast.makeText(this@NewPostActivity, "Error al cargar categorías: ${t.message}", Toast.LENGTH_LONG).show()
+                    loadCategoriesFromSharedPreferences() // Carga las categorías locales si falla
                 }
 
-                override fun onResponse(call: Call<PostRB>, response: Response<PostRB>) {
-                    //Toast.makeText(this@SaveAlbumActivity,"OK", Toast.LENGTH_LONG).show()
-                    if (status == 2) { // Si es un borrador
-                        fetchDraftsFromDatabase(userId) // Actualiza el array de borradores
+                override fun onResponse(call: Call<List<Category>>, response: Response<List<Category>>) {
+                    if (response.isSuccessful) {
+                        categoryArray = response.body() ?: emptyList()
+
+                        // Guarda las categorías en SharedPreferences para usarlas offline
+                        saveCategoriesToSharedPreferences(categoryArray)
+
+                        // Actualiza el spinner con las categorías
+                        updateCategorySpinner()
+                        Toast.makeText(this@NewPostActivity, "Categorías cargadas correctamente", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this@NewPostActivity, "Error al obtener categorías del servidor", Toast.LENGTH_LONG).show()
+                        loadCategoriesFromSharedPreferences() // Carga las categorías locales si falla
                     }
-                    // Limpiar los campos después de guardar
-                    binding.titleETNewPost.text.clear()
-                    binding.imageViewNewPost.setImageResource(R.drawable.ic_menu_camera)  // Reemplaza con una imagen de placeholder
-                    imgArray = null
-
-                    // Inflar el layout del diálogo usando binding
-                    val dialogBinding = DialogSuccessBinding.inflate(layoutInflater)
-
-                    // Crear el AlertDialog con el layout inflado
-                    val builder = android.app.AlertDialog.Builder(this@NewPostActivity)
-                    builder.setView(dialogBinding.root)
-
-                    val dialog = builder.create()
-
-                    // Configurar el botón "OK" para cerrar el diálogo y regresar a la actividad anterior
-                    dialogBinding.okBtnDialog.setOnClickListener {
-                        dialog.dismiss()
-                        finish() // Vuelve a la actividad anterior
-                    }
-
-                    // Mostrar el diálogo
-                    dialog.show()
                 }
             })
+        } else {
+            // Si no hay internet, carga las categorías desde SharedPreferences
+            loadCategoriesFromSharedPreferences()
         }
     }
 
-    fun getCategories(){
-        val service: Service = RestEngine.getRestEngine().create(Service::class.java)
-        val result: Call<List<Category>> = service.getCategories()
-
-        result.enqueue(object : Callback<List<Category>> {
-            override fun onFailure(call: Call<List<Category>>, t: Throwable) {
-                Toast.makeText(this@NewPostActivity, "Error: " + t.message, Toast.LENGTH_LONG).show()
-            }
-
-            override fun onResponse(call: Call<List<Category>>, response: Response<List<Category>>) {
-                categoryArray = response.body() ?: emptyList()
-                val adapter = ArrayAdapter(
-                    this@NewPostActivity,
-                    R.layout.simple_spinner_item,
-                    categoryArray.map { it.name })
-                adapter.setDropDownViewResource(R.layout.simple_spinner_dropdown_item)
-                binding.spinner2.adapter = adapter
-                Toast.makeText(this@NewPostActivity, "Categorias cargados", Toast.LENGTH_LONG).show()
-            }
-        })
-    }
     override fun onBackPressed() {
         if (validatePost()) {
             // Mostrar diálogo si los campos están llenos
@@ -211,35 +284,60 @@ class NewPostActivity : AppCompatActivity() {
         const val PICK_IMAGE_REQUEST = 1
     }
 
-    private fun fetchDraftsFromDatabase(userId: Int) {
-        val service: Service = RestEngine.getRestEngine().create(Service::class.java)
-        val result: Call<List<Post>> = service.getPostsByUserId(userId) // Este endpoint debería devolver todos los borradores del usuario
+    fun loadDraftsFromSharedPreferences() {
+        val sharedPreferences = getSharedPreferences("LOCAL_STORAGE", MODE_PRIVATE)
+        val gson = Gson()
+        val jsonDrafts = sharedPreferences.getString("drafts", null)
 
-        result.enqueue(object : Callback<List<Post>> {
-            override fun onFailure(call: Call<List<Post>>, t: Throwable) {
-                Toast.makeText(this@NewPostActivity, "Error al obtener borradores: ${t.message}", Toast.LENGTH_LONG).show()
-            }
+        if (jsonDrafts != null) {
+            val type = object : com.google.gson.reflect.TypeToken<MutableList<Post>>() {}.type
+            draftsArray = gson.fromJson(jsonDrafts, type) // Convierte el JSON a un MutableList<Post>
+        } else {
+            draftsArray = mutableListOf() // Si no hay borradores, inicializa una lista vacía
+        }
 
-            override fun onResponse(call: Call<List<Post>>, response: Response<List<Post>>) {
-                if (response.isSuccessful) {
-                    val drafts = response.body()?: emptyList()
-                    val filteredDrafts = drafts.filter { it.status == 2 }
-                    draftsArray = ArrayList(filteredDrafts)
-
-                    val sharedPreferences = getSharedPreferences("LOCAL_STORAGE", MODE_PRIVATE)
-                    val editor = sharedPreferences.edit()
-
-                    // Convierte el array a JSON
-                    val gson = Gson()
-                    val jsonDrafts = gson.toJson(draftsArray) // draftsArray es el ArrayList<Post> de borradores
-
-                    // Guarda el JSON en SharedPreferences
-                    editor.putString("drafts", jsonDrafts)
-                    editor.apply()
-
-                    Toast.makeText(this@NewPostActivity, "Borradores cargados correctamente", Toast.LENGTH_SHORT).show()
-                }
-            }
-        })
+        Toast.makeText(this, "Borradores cargados localmente", Toast.LENGTH_SHORT).show()
     }
+
+    fun isInternetAvailable(context: Context): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val activeNetwork = connectivityManager.activeNetwork
+        val networkCapabilities = connectivityManager.getNetworkCapabilities(activeNetwork)
+        return networkCapabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+    }
+    fun saveCategoriesToSharedPreferences(categories: List<Category>) {
+        val sharedPreferences = getSharedPreferences("LOCAL_STORAGE", MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        val gson = Gson()
+        val jsonCategories = gson.toJson(categories)
+        editor.putString("categories", jsonCategories)
+        editor.apply()
+    }
+    fun loadCategoriesFromSharedPreferences() {
+        val sharedPreferences = getSharedPreferences("LOCAL_STORAGE", MODE_PRIVATE)
+        val gson = Gson()
+        val jsonCategories = sharedPreferences.getString("categories", null)
+
+        if (jsonCategories != null) {
+            val type = object : com.google.gson.reflect.TypeToken<List<Category>>() {}.type
+            categoryArray = gson.fromJson(jsonCategories, type)
+            updateCategorySpinner()
+            Toast.makeText(this, "Categorías cargadas localmente", Toast.LENGTH_SHORT).show()
+        } else {
+            categoryArray = emptyList()
+            Toast.makeText(this, "No hay categorías guardadas localmente", Toast.LENGTH_SHORT).show()
+        }
+    }
+    fun updateCategorySpinner() {
+        val adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_item,
+            categoryArray.map { it.name }
+        )
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.spinner2.adapter = adapter
+    }
+
+
+
 }

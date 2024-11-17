@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.lumiere.Models.User
 import com.example.lumiere.databinding.ActivitySignupBinding
 import com.example.lumiere.databinding.DialogSuccessBinding
+import com.example.lumiere.responseBody.UserRB
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -44,7 +45,7 @@ class SignupActivity : AppCompatActivity() {
             return
         }
 
-        if (email.isEmpty()) {
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             Toast.makeText(this, "Por favor, ingrese un correo.", Toast.LENGTH_SHORT).show()
             return
         }
@@ -52,9 +53,19 @@ class SignupActivity : AppCompatActivity() {
             Toast.makeText(this, "Por favor, ingrese una contraseña.", Toast.LENGTH_SHORT).show()
             return
         }
+        val passwordRegex = Regex("^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[@#\$%^&+=])[A-Za-z\\d@#\$%^&+=]{8,}$")
+        if (!password.matches(passwordRegex)) {
+            Toast.makeText(
+                this,
+                "La contraseña debe tener al menos 8 caracteres, incluyendo una letra mayúscula, una letra minúscula, un número y un carácter especial (@#\$%^&+=).",
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
         signUp()
 
     }
+    //PONER VALIDACIONES
     private fun signUp(){
         //SE CONSTRUYE EL OBJECTO A ENVIAR,  ESTO DEPENDE DE COMO CONSTRUYAS EL SERVICIO
         // SI TU SERVICIO POST REQUIERE DOS PARAMETROS HACER UN OBJECTO CON ESOS DOS PARAMETROS
@@ -69,14 +80,14 @@ class SignupActivity : AppCompatActivity() {
             null)
 
         val service: Service =  RestEngine.getRestEngine().create(Service::class.java)
-        val result: Call<Int> = service.signUp(user)
+        val result: Call<UserRB> = service.signUp(user)
 
-        result.enqueue(object: Callback<Int> {
-            override fun onFailure(call: Call<Int>, t: Throwable) {
+        result.enqueue(object: Callback<UserRB> {
+            override fun onFailure(call: Call<UserRB>, t: Throwable) {
                 Toast.makeText(this@SignupActivity,"Error" + t.message, Toast.LENGTH_LONG).show()
             }
 
-            override fun onResponse(call: Call<Int>, response: Response<Int>) {
+            override fun onResponse(call: Call<UserRB>, response: Response<UserRB>) {
                 //Toast.makeText(this@SignupActivity,"OK", Toast.LENGTH_LONG).show()
                 // Limpiar los campos después de guardar
                 binding.firstNameSU.text.clear()

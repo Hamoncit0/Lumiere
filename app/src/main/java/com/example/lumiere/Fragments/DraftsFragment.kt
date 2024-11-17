@@ -31,7 +31,7 @@ class DraftsFragment : Fragment() {
     // Lista de álbumes y adaptador para el RecyclerView
     private lateinit var postList: List<Post>
     private lateinit var postAdapter: PostAdapter
-    var draftsArray: List<Post> = emptyList()
+    private var draftsArray: MutableList<Post> = mutableListOf()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -54,45 +54,14 @@ class DraftsFragment : Fragment() {
         userId = sharedPreferences.getInt("userId", 0) // null es el valor por defecto
 
         val emptyMutableList: MutableList<Post> = mutableListOf()
-        postAdapter = PostAdapter(emptyMutableList, userId) // Inicializa con una lista vacía
-        recyclerView.adapter = postAdapter
 
-        // Cargar álbumes desde el servidor
-        if(isInternetAvailable(requireContext())) {
-            getPosts()
-        } else {
             loadDraftsLocally()
             postAdapter = PostAdapter(draftsArray.toMutableList(), userId) // Actualiza el adaptador con los borradores locales
-            binding.recycleViewDrafts.adapter = postAdapter // Asigna el adaptador al RecyclerView
+            recyclerView.adapter = postAdapter // Asigna el adaptador al RecyclerView
             Toast.makeText(requireContext(), "Cargando drafts locales", Toast.LENGTH_LONG).show()
 
-        }
-
     }
 
-    private fun getPosts() {
-        val sharedPreferences = requireContext().getSharedPreferences("USER_PREF",
-            Context.MODE_PRIVATE
-        )
-        val userId = sharedPreferences.getInt("userId", 0)
-
-        val service: Service = RestEngine.getRestEngine().create(Service::class.java)
-        val result: Call<List<Post>> = service.getPostsByUserId(userId)
-
-        result.enqueue(object : Callback<List<Post>> {
-            override fun onFailure(call: Call<List<Post>>, t: Throwable) {
-                Toast.makeText(requireContext(), "Error: " + t.message, Toast.LENGTH_LONG).show()
-            }
-
-            override fun onResponse(call: Call<List<Post>>, response: Response<List<Post>>) {
-                val posts = response.body() ?: emptyList()
-                postList = posts.filter { it.status == 2 } // Filtra los posts con status activo
-                postAdapter = PostAdapter(postList.toMutableList(), userId) // Actualiza el adaptador con los posts cargados
-                binding.recycleViewDrafts.adapter = postAdapter // Asigna el adaptador al RecyclerView
-                Toast.makeText(requireContext(), "drafts cargados", Toast.LENGTH_LONG).show()
-            }
-        })
-    }
     private fun loadDraftsLocally() {
         val sharedPreferences = requireContext().getSharedPreferences("LOCAL_STORAGE", MODE_PRIVATE)
         val gson = Gson()
@@ -109,12 +78,14 @@ class DraftsFragment : Fragment() {
             draftsArray = ArrayList() // Si no hay datos, inicializa una lista vacía
         }
     }
-
-    fun isInternetAvailable(context: Context): Boolean {
-        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val activeNetwork = connectivityManager.activeNetwork
-        val networkCapabilities = connectivityManager.getNetworkCapabilities(activeNetwork)
-        return networkCapabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+    fun saveDraftsToSharedPreferences(holder: PostAdapter.ViewHolder) {
+        val sharedPreferences = holder.itemView.context.getSharedPreferences("LOCAL_STORAGE", MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        val gson = Gson()
+        val jsonDrafts = gson.toJson(draftsArray) // Convierte el array de borradores a JSON
+        editor.putString("drafts", jsonDrafts)
+        editor.apply()
     }
+
 
 }

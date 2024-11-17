@@ -7,5 +7,6 @@ data class PostRB (
     var message: String ?= null,
     var status: String ?= null,
     var post: Post?= null,
-    var list: List<Post> ?= null
+    var list: List<Post> ?= null,
+    var postId: Int ?= null
 )

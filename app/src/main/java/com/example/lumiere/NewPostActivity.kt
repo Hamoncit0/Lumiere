@@ -59,6 +59,12 @@ class NewPostActivity : AppCompatActivity() {
             if (validatePost())
             post(1)
         }
+
+
+        val post = intent.getParcelableExtra<Post>("PostData")
+        if (post != null) {
+            Toast.makeText(this, "Post ID recibido: ${post.id}", Toast.LENGTH_SHORT).show()
+        }
     }
     private fun validatePost(): Boolean {
         val title = binding.titleETNewPost.text.toString().trim()

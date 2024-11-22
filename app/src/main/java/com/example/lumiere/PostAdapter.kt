@@ -2,6 +2,7 @@ package com.example.lumiere
 
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
+import android.content.Intent
 import android.graphics.BitmapFactory
 import android.util.Base64
 import android.view.LayoutInflater
@@ -28,6 +29,7 @@ class PostAdapter (private val posts : MutableList<Post>, private val currentUse
         val username : TextView = view.findViewById(R.id.postUsername)
         val deleteButton: Button = view.findViewById(R.id.options)
         val postButton: Button = view.findViewById(R.id.add)
+        val editButton: Button = view.findViewById(R.id.edit)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -46,9 +48,12 @@ class PostAdapter (private val posts : MutableList<Post>, private val currentUse
         // Mostrar botón solo si el usuario es el mismo
         if (item.user_id == currentUser) {
             holder.deleteButton.visibility = View.VISIBLE
+            holder.editButton.visibility = View.VISIBLE
         } else {
             holder.deleteButton.visibility = View.GONE
+            holder.editButton.visibility = View.GONE
         }
+
         if(item.status == 2){
             holder.postButton.visibility = View.VISIBLE
         }else{
@@ -86,6 +91,14 @@ class PostAdapter (private val posts : MutableList<Post>, private val currentUse
             }
 
             dialogBuilder.show()
+        }
+
+        holder.editButton.setOnClickListener {
+            // mandar al activity de editar
+            val intent = Intent(holder.itemView.context, EditPostActivity::class.java)
+            intent.putExtra("PostData", item)
+            holder.itemView.context.startActivity(intent)
+
         }
 
         holder.postButton.setOnClickListener {

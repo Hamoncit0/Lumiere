@@ -66,11 +66,12 @@ class HomeFragment : Fragment() {
 
             override fun onResponse(call: Call<List<Post>>, response: Response<List<Post>>) {
                 val posts = response.body() ?: emptyList()
-                postList = posts.filter { it.status == 1 } // Filtra los posts con status activo
-                postAdapter = PostAdapter(postList.toMutableList(), userId) // Actualiza el adaptador con los posts cargados
+                val filteredPosts = posts.filter { it.status == 1 } // Filtra los posts con status activo
+                postAdapter = PostAdapter(filteredPosts.toMutableList(), userId) // Actualiza el adaptador con los posts cargados
                 binding.recyclerViewHome.adapter = postAdapter // Asigna el adaptador al RecyclerView
                 Toast.makeText(requireContext(), "Posts cargados", Toast.LENGTH_LONG).show()
             }
         })
     }
+
 }

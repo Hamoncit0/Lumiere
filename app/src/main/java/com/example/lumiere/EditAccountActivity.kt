@@ -66,7 +66,7 @@ class EditAccountActivity : AppCompatActivity() {
         binding.button6.setOnClickListener {
             val intent = Intent(Intent.ACTION_PICK)
             intent.type = "image/*"
-            startActivityForResult(intent, NewPostActivity.PICK_IMAGE_REQUEST)
+            startActivityForResult(intent, EditAccountActivity.PICK_IMAGE_REQUEST)
         }
 
         binding.button4.setOnClickListener {

@@ -54,7 +54,7 @@ class EditPostActivity : AppCompatActivity() {
         binding.addPictureBtnNP.setOnClickListener {
             val intent = Intent(Intent.ACTION_PICK)
             intent.type = "image/*"
-            startActivityForResult(intent, NewPostActivity.PICK_IMAGE_REQUEST)
+            startActivityForResult(intent, EditPostActivity.PICK_IMAGE_REQUEST)
         }
 
 
@@ -94,6 +94,12 @@ class EditPostActivity : AppCompatActivity() {
                 updatePost(post?: Post())
         }
     }
+
+    // Constante para identificar la solicitud de selección de imagen
+    companion object {
+        const val PICK_IMAGE_REQUEST = 1
+    }
+
 
     fun updatePost(post: Post) {
 
@@ -256,7 +262,7 @@ class EditPostActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
 
         // Si el usuario seleccionó una imagen, actualizar la vista y guardar el ByteArray
-        if (requestCode == NewPostActivity.PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null && data.data != null) {
+        if (requestCode == EditPostActivity.PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null && data.data != null) {
             // Carga la imagen seleccionada en el ImageView
             val imageUri = data.data
             binding.imageView8.setImageURI(imageUri)

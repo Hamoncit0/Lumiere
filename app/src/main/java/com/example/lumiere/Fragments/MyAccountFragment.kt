@@ -20,14 +20,11 @@ import android.view.ViewGroup
 import android.widget.Toast
 import com.example.lumiere.Models.Post
 import com.example.lumiere.EditAccountActivity
-import com.example.lumiere.HomeActivity
-import com.example.lumiere.LoginActivity
 import com.example.lumiere.MainActivity
 import com.example.lumiere.Models.User
 import com.example.lumiere.PostAdapter
 import com.example.lumiere.RestEngine
 import com.example.lumiere.Service
-import com.example.lumiere.databinding.FragmentHomeBinding
 import com.example.lumiere.databinding.FragmentMyAccountBinding
 import com.example.lumiere.responseBody.PostRB
 import com.example.lumiere.responseBody.UserRB

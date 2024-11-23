@@ -14,6 +14,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
+import androidx.viewpager2.widget.ViewPager2
 import com.example.lumiere.Models.Post
 import com.example.lumiere.responseBody.PostRB
 import com.google.gson.Gson
@@ -30,6 +31,7 @@ class PostAdapter (private val posts : MutableList<Post>, private val currentUse
         val deleteButton: Button = view.findViewById(R.id.options)
         val postButton: Button = view.findViewById(R.id.add)
         val editButton: Button = view.findViewById(R.id.edit)
+        val viewPager: ViewPager2 = view.findViewById(R.id.viewPager)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -45,6 +47,17 @@ class PostAdapter (private val posts : MutableList<Post>, private val currentUse
         val item = posts[position]
         holder.title.text = item.title ?: "Título desconocido"
         holder.username.text = item.username ?: "Usuario desconocido"
+
+        // Mostrar el slider de imágenes solo si el post tiene más de una imagen
+        if (item.images.isNotEmpty()) {
+            // Aquí la lista de imágenes ahora es una lista de URLs o base64
+            val imageUrls = item.images  // Ya no necesitas mapear a 'it.image' porque son simples Strings
+            val imageAdapter = ImageSliderAdapter(imageUrls)  // Asegúrate que tu ImageSliderAdapter acepta una lista de Strings
+            holder.viewPager.adapter = imageAdapter
+        } else {
+            holder.viewPager.visibility = View.GONE  // Si no hay imágenes, oculta el ViewPager
+        }
+
         // Mostrar botón solo si el usuario es el mismo
         if (item.user_id == currentUser) {
             holder.deleteButton.visibility = View.VISIBLE

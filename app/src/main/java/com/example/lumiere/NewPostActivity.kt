@@ -10,6 +10,8 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.widget.ArrayAdapter
+import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -31,7 +33,7 @@ import java.util.Base64
 
 class NewPostActivity : AppCompatActivity() {
     lateinit var binding: ActivityNewPostBinding
-    var imgArray:ByteArray? =  null
+    var imgArray: MutableList<String> = mutableListOf()
     var categoryArray: List<Category> = emptyList()
     private var draftsArray: MutableList<Post> = mutableListOf()
 
@@ -53,7 +55,8 @@ class NewPostActivity : AppCompatActivity() {
         binding.addPictureBtnNP.setOnClickListener {
             val intent = Intent(Intent.ACTION_PICK)
             intent.type = "image/*"
-            startActivityForResult(intent, PICK_IMAGE_REQUEST)
+            intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+            startActivityForResult(intent, PICK_IMAGES_REQUEST)
         }
         binding.savePostBtn.setOnClickListener {
             if (validatePost())
@@ -101,9 +104,11 @@ class NewPostActivity : AppCompatActivity() {
             //Si esta conectado a internet hacer el procedimiento normal
             if (isLoggedIn && userId != 0) {
 
-                val encodedString: String = Base64.getEncoder().encodeToString(this.imgArray)
+                // Convertir el ByteArray a una cadena Base64 en cada uno de los elementos de imgArray
+                val encodedImages = imgArray.map { img ->
+                    "data:image/png;base64," + Base64.getEncoder().encodeToString(img.toByteArray())
+                }
 
-                val strEncodeImage:String = "data:image/png;base64," + encodedString
 
                 val selectedPosition = binding.spinner2.selectedItemPosition
                 val selectedCategoryId = categoryArray.getOrNull(selectedPosition)?.id ?: 0
@@ -112,9 +117,12 @@ class NewPostActivity : AppCompatActivity() {
                 val album = Post(0,
                     userId,
                     selectedCategoryId,
-                    strEncodeImage,
+                    "",
                     binding.titleETNewPost.text.toString(),
-                    status
+                    status,
+                    "",
+                    "",
+                    encodedImages
                 )
 
                 val service: Service =  RestEngine.getRestEngine().create(Service::class.java)
@@ -148,8 +156,8 @@ class NewPostActivity : AppCompatActivity() {
                         }
                         // Limpiar los campos después de guardar
                         binding.titleETNewPost.text.clear()
-                        binding.imageViewNewPost.setImageResource(R.drawable.ic_menu_camera)  // Reemplaza con una imagen de placeholder
-                        imgArray = null
+                        //binding.imageViewNewPost.setImageResource(R.drawable.ic_menu_camera)  // Reemplaza con una imagen de placeholder
+                        imgArray = emptyList<String>().toMutableList()
 
                         // Inflar el layout del diálogo usando binding
                         val dialogBinding = DialogSuccessBinding.inflate(layoutInflater)
@@ -176,9 +184,11 @@ class NewPostActivity : AppCompatActivity() {
         else{
 
             //agregar el post al array de borradores
-            val encodedString: String = Base64.getEncoder().encodeToString(this.imgArray)
+            // Si no hay internet, guardar el post como borrador
+            val encodedImages = imgArray.map { img ->
+                "data:image/png;base64," + Base64.getEncoder().encodeToString(img.toByteArray())
+            }
 
-            val strEncodeImage:String = "data:image/png;base64," + encodedString
 
             val selectedPosition = binding.spinner2.selectedItemPosition
             val selectedCategoryId = categoryArray.getOrNull(selectedPosition)?.id ?: 0
@@ -186,9 +196,12 @@ class NewPostActivity : AppCompatActivity() {
             val album = Post(0,
                 userId,
                 selectedCategoryId,
-                strEncodeImage,
+                "",
                 binding.titleETNewPost.text.toString(),
-                status
+                status,
+                "",
+                "",
+                encodedImages
             )
             loadDraftsFromSharedPreferences()
             draftsArray.add(album)
@@ -265,29 +278,76 @@ class NewPostActivity : AppCompatActivity() {
         }
     }
 
+    // En el método onActivityResult, donde procesas las imágenes seleccionadas:
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        // Si el usuario seleccionó una imagen, actualizar la vista y guardar el ByteArray
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null && data.data != null) {
-            // Carga la imagen seleccionada en el ImageView
-            val imageUri = data.data
-            binding.imageViewNewPost.setImageURI(imageUri)
+        if (requestCode == PICK_IMAGES_REQUEST && resultCode == Activity.RESULT_OK && data != null) {
+            val selectedImages = mutableListOf<Bitmap>()
 
-            // Cargar el bitmap desde el URI
-            val inputStream: InputStream? = contentResolver.openInputStream(imageUri!!)
-            val photo = BitmapFactory.decodeStream(inputStream)
-            val stream = ByteArrayOutputStream()
+            // Si hay múltiples imágenes seleccionadas
+            if (data.clipData != null) {
+                val count = data.clipData!!.itemCount
+                for (i in 0 until count) {
+                    val imageUri = data.clipData!!.getItemAt(i).uri
+                    val inputStream: InputStream? = contentResolver.openInputStream(imageUri)
+                    val photo = BitmapFactory.decodeStream(inputStream)
 
-            // Comprimir el bitmap
-            photo.compress(Bitmap.CompressFormat.JPEG, 80, stream)
-            imgArray = stream.toByteArray()
+                    selectedImages.add(photo)
+                }
+            }
+            // Si solo se seleccionó una imagen
+            else if (data.data != null) {
+                val imageUri = data.data
+                val inputStream: InputStream? = contentResolver.openInputStream(imageUri!!)
+                val photo = BitmapFactory.decodeStream(inputStream)
+
+                selectedImages.add(photo)
+            }
+
+            // Muestra las imágenes en el layout
+            displaySelectedImages(selectedImages)
         }
     }
 
+    // Función para mostrar las imágenes seleccionadas en el LinearLayout
+    // Función para mostrar las imágenes seleccionadas en el LinearLayout
+    // Función para mostrar las imágenes seleccionadas en el LinearLayout
+    private fun displaySelectedImages(images: List<Bitmap>) {
+        // Limpiar el contenedor de imágenes antes de añadir las nuevas
+        binding.imagesContainer.removeAllViews()
+
+        // Limpiar la lista de imágenes base64
+        imgArray.clear()
+
+        for (image in images) {
+            val imageView = ImageView(this)
+            imageView.setImageBitmap(image)
+
+            // Ajustar el tamaño de las imágenes si es necesario
+            imageView.layoutParams = LinearLayout.LayoutParams(200, 200).apply {
+                marginEnd = 16
+            }
+
+            // Añadir el ImageView al contenedor
+            binding.imagesContainer.addView(imageView)
+
+            // Convertir el Bitmap a ByteArray y luego a base64
+            val stream = ByteArrayOutputStream()
+            image.compress(Bitmap.CompressFormat.JPEG, 80, stream)
+            val byteArray = stream.toByteArray()
+
+            // Convertir el byteArray a base64 y agregarlo a la lista
+            val base64Image = Base64.getEncoder().encodeToString(byteArray)
+            imgArray.add(base64Image)  // Guardar la imagen en la lista
+        }
+    }
+
+
+
     // Constante para identificar la solicitud de selección de imagen
     companion object {
-        const val PICK_IMAGE_REQUEST = 1
+        const val PICK_IMAGES_REQUEST = 2
     }
 
     fun loadDraftsFromSharedPreferences() {

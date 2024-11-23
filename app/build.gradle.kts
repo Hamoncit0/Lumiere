@@ -60,4 +60,7 @@ dependencies {
     //para pasar un array a json y guardarlo en sharedPreferences
     implementation ("com.google.code.gson:gson:2.8.8")
 
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation("androidx.viewpager2:viewpager2:1.0.0")
+
 }

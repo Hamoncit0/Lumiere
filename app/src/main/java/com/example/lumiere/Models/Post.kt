@@ -16,10 +16,3 @@ data class Post(
     var username: String? = null,
     var images: List<String> = listOf()
     ) : Parcelable
-
-//CLASE OG DE POSTS
-//class Post(
-//    val imageURL: String,
-//    val username: String,
-//    val description: String,
-//    var imgArray:String? =  null)

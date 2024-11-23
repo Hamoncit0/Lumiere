@@ -105,9 +105,7 @@ class NewPostActivity : AppCompatActivity() {
             if (isLoggedIn && userId != 0) {
 
                 // Convertir el ByteArray a una cadena Base64 en cada uno de los elementos de imgArray
-                val encodedImages = imgArray.map { img ->
-                    "data:image/png;base64," + Base64.getEncoder().encodeToString(img.toByteArray())
-                }
+                val encodedImages = imgArray
 
 
                 val selectedPosition = binding.spinner2.selectedItemPosition
@@ -310,8 +308,7 @@ class NewPostActivity : AppCompatActivity() {
         }
     }
 
-    // Función para mostrar las imágenes seleccionadas en el LinearLayout
-    // Función para mostrar las imágenes seleccionadas en el LinearLayout
+
     // Función para mostrar las imágenes seleccionadas en el LinearLayout
     private fun displaySelectedImages(images: List<Bitmap>) {
         // Limpiar el contenedor de imágenes antes de añadir las nuevas
@@ -337,12 +334,11 @@ class NewPostActivity : AppCompatActivity() {
             image.compress(Bitmap.CompressFormat.JPEG, 80, stream)
             val byteArray = stream.toByteArray()
 
-            // Convertir el byteArray a base64 y agregarlo a la lista
-            val base64Image = Base64.getEncoder().encodeToString(byteArray)
+            // Convertir el byteArray a base64 con el prefijo adecuado
+            val base64Image = "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(byteArray)
             imgArray.add(base64Image)  // Guardar la imagen en la lista
         }
     }
-
 
 
     // Constante para identificar la solicitud de selección de imagen

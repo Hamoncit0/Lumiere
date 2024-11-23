@@ -8,6 +8,18 @@
     tools:context=".EditPostActivity"
     android:background="@color/background">
 
+    <LinearLayout
+        android:id="@+id/imagesContainer"
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        android:scrollbars="horizontal"
+        app:layout_constraintBottom_toTopOf="@+id/addPictureBtnNP"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbarEdit" />
+
     <Button
         android:id="@+id/addPictureBtnNP"
         style="@android:style/Widget.Button"
@@ -23,7 +35,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView8" />
+        app:layout_constraintTop_toBottomOf="@+id/imagesContainer" />
 
     <Button
         android:id="@+id/editPostButton"
@@ -102,16 +114,6 @@
         app:title="Edit Post"
         android:paddingTop="10dp"
         app:titleTextColor="@color/white" />
-
-    <ImageView
-        android:id="@+id/imageView8"
-        android:layout_width="209dp"
-        android:layout_height="220dp"
-        android:layout_marginTop="32dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/toolbarEdit"
-        app:srcCompat="@drawable/image" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -10,6 +10,8 @@ import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.util.Base64
 import android.widget.ArrayAdapter
+import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -33,7 +35,7 @@ import java.io.InputStream
 class EditPostActivity : AppCompatActivity() {
 
     lateinit var binding: ActivityEditPostBinding
-    var imgArray:ByteArray? =  null
+    var imgArray: MutableList<String> = mutableListOf()
     var categoryArray: List<Category> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,7 +56,7 @@ class EditPostActivity : AppCompatActivity() {
         binding.addPictureBtnNP.setOnClickListener {
             val intent = Intent(Intent.ACTION_PICK)
             intent.type = "image/*"
-            startActivityForResult(intent, EditPostActivity.PICK_IMAGE_REQUEST)
+            startActivityForResult(intent, EditPostActivity.PICK_IMAGES_REQUEST)
         }
 
 
@@ -78,15 +80,35 @@ class EditPostActivity : AppCompatActivity() {
             }
 
             val strImage = post.image?.replace("data:image/png;base64,", "")
+            val bitmaps = mutableListOf<Bitmap>()
+
+            // Primero, si hay una imagen principal (no en array) en el objeto `post`
             if (!strImage.isNullOrEmpty()) {
                 try {
                     val byteArray = Base64.decode(strImage, Base64.DEFAULT)
                     val bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
-                    binding.imageView8.setImageBitmap(bitmap)
+                    bitmaps.add(bitmap)  // Añadir la imagen principal a la lista
                 } catch (e: IllegalArgumentException) {
                     e.printStackTrace()
                 }
             }
+
+            // Luego, si hay más imágenes en el array `post.images`
+            post.images?.forEach { strImage ->
+                try {
+                    val byteArray = Base64.decode(strImage, Base64.DEFAULT)
+                    val bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
+                    bitmaps.add(bitmap)  // Añadir cada imagen al listado
+                } catch (e: IllegalArgumentException) {
+                    e.printStackTrace()
+                }
+            }
+
+            // Ahora mostrar todas las imágenes en el LinearLayout
+            if (bitmaps.isNotEmpty()) {
+                displaySelectedImages(bitmaps)
+            }
+
         }
 
         binding.editPostButton.setOnClickListener {
@@ -95,21 +117,11 @@ class EditPostActivity : AppCompatActivity() {
         }
     }
 
-    // Constante para identificar la solicitud de selección de imagen
-    companion object {
-        const val PICK_IMAGE_REQUEST = 1
-    }
-
-
     fun updatePost(post: Post) {
 
-        val encodedString: String = if (imgArray != null) {
-            java.util.Base64.getEncoder().encodeToString(this.imgArray)
-        } else {
-            ""
-        }
+        // Convertir el ByteArray a una cadena Base64 en cada uno de los elementos de imgArray
+        val encodedImages = imgArray
 
-        val strEncodeImage:String = "data:image/png;base64," + encodedString
         //SE CONSTRUYE EL OBJECTO A ENVIAR,  ESTO DEPENDE DE COMO CONSTRUYAS EL SERVICIO
         // SI TU SERVICIO POST REQUIERE DOS PARAMETROS HACER UN OBJECTO CON ESOS DOS PARAMETROS
         val selectedPosition = binding.spinner2.selectedItemPosition
@@ -118,9 +130,12 @@ class EditPostActivity : AppCompatActivity() {
         val postToUpdate = Post(post.id,
             post.user_id,
             selectedCategoryId,
-            strEncodeImage,
+            "",
             binding.titleETEditPost.text.toString(),
-            post.status)
+            post.status,
+            "",
+            "",
+            encodedImages)
 
         val service: Service = RestEngine.getRestEngine().create(Service::class.java)
         val result: Call<PostRB> = service.editPost(postToUpdate)
@@ -258,23 +273,74 @@ class EditPostActivity : AppCompatActivity() {
     }
 
 
+    // En el método onActivityResult, donde procesas las imágenes seleccionadas:
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        // Si el usuario seleccionó una imagen, actualizar la vista y guardar el ByteArray
-        if (requestCode == EditPostActivity.PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null && data.data != null) {
-            // Carga la imagen seleccionada en el ImageView
-            val imageUri = data.data
-            binding.imageView8.setImageURI(imageUri)
+        if (requestCode == PICK_IMAGES_REQUEST && resultCode == Activity.RESULT_OK && data != null) {
+            val selectedImages = mutableListOf<Bitmap>()
 
-            // Cargar el bitmap desde el URI
-            val inputStream: InputStream? = contentResolver.openInputStream(imageUri!!)
-            val photo = BitmapFactory.decodeStream(inputStream)
-            val stream = ByteArrayOutputStream()
+            // Si hay múltiples imágenes seleccionadas
+            if (data.clipData != null) {
+                val count = data.clipData!!.itemCount
+                for (i in 0 until count) {
+                    val imageUri = data.clipData!!.getItemAt(i).uri
+                    val inputStream: InputStream? = contentResolver.openInputStream(imageUri)
+                    val photo = BitmapFactory.decodeStream(inputStream)
 
-            // Comprimir el bitmap
-            photo.compress(Bitmap.CompressFormat.JPEG, 80, stream)
-            imgArray = stream.toByteArray()
+                    selectedImages.add(photo)
+                }
+            }
+            // Si solo se seleccionó una imagen
+            else if (data.data != null) {
+                val imageUri = data.data
+                val inputStream: InputStream? = contentResolver.openInputStream(imageUri!!)
+                val photo = BitmapFactory.decodeStream(inputStream)
+
+                selectedImages.add(photo)
+            }
+
+            // Muestra las imágenes en el layout
+            displaySelectedImages(selectedImages)
         }
     }
+
+
+    // Función para mostrar las imágenes seleccionadas en el LinearLayout
+    private fun displaySelectedImages(images: List<Bitmap>) {
+        // Limpiar el contenedor de imágenes antes de añadir las nuevas
+        binding.imagesContainer.removeAllViews()
+
+        // Limpiar la lista de imágenes base64
+        imgArray.clear()
+
+        for (image in images) {
+            val imageView = ImageView(this)
+            imageView.setImageBitmap(image)
+
+            // Ajustar el tamaño de las imágenes si es necesario
+            imageView.layoutParams = LinearLayout.LayoutParams(200, 200).apply {
+                marginEnd = 16
+            }
+
+            // Añadir el ImageView al contenedor
+            binding.imagesContainer.addView(imageView)
+
+            // Convertir el Bitmap a ByteArray y luego a base64
+            val stream = ByteArrayOutputStream()
+            image.compress(Bitmap.CompressFormat.JPEG, 80, stream)
+            val byteArray = stream.toByteArray()
+
+            // Convertir el byteArray a base64 con el prefijo adecuado
+            val base64Image = "data:image/jpeg;base64," + java.util.Base64.getEncoder().encodeToString(byteArray)
+            imgArray.add(base64Image)  // Guardar la imagen en la lista
+        }
+    }
+
+
+    // Constante para identificar la solicitud de selección de imagen
+    companion object {
+        const val PICK_IMAGES_REQUEST = 2
+    }
+
 }

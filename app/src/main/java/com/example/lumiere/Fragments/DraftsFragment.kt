@@ -55,10 +55,10 @@ class DraftsFragment : Fragment() {
 
         val emptyMutableList: MutableList<Post> = mutableListOf()
 
-            loadDraftsLocally()
-            postAdapter = PostAdapter(draftsArray.toMutableList(), userId) // Actualiza el adaptador con los borradores locales
-            recyclerView.adapter = postAdapter // Asigna el adaptador al RecyclerView
-            Toast.makeText(requireContext(), "Cargando drafts locales", Toast.LENGTH_LONG).show()
+        loadDraftsLocally()
+        postAdapter = PostAdapter(draftsArray.toMutableList(), userId) // Actualiza el adaptador con los borradores locales
+        recyclerView.adapter = postAdapter // Asigna el adaptador al RecyclerView
+        Toast.makeText(requireContext(), "Cargando drafts locales", Toast.LENGTH_LONG).show()
 
     }
 

@@ -25,7 +25,7 @@ interface Service{
     @GET("users/user/{userId}")
     fun getUserById(@Path("userId") userId: Int):Call<UserRB>
     @Headers("Content-Type: application/json")
-    @POST("users/updateUser")
+    @PUT("users/updateUser")
     fun updateUser(@Body userData: User):Call<UserRB>
 
     //POSTS

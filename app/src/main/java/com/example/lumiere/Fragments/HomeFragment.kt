@@ -22,8 +22,8 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
     var userId: Int = 0
     // Lista de álbumes y adaptador para el RecyclerView
-    private lateinit var postList: List<Post>
     private lateinit var postAdapter: PostAdapter
+    private val postList: MutableList<Post> = mutableListOf()
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -41,12 +41,11 @@ class HomeFragment : Fragment() {
         val sharedPreferences = requireContext().getSharedPreferences("USER_PREF", AppCompatActivity.MODE_PRIVATE)
         userId = sharedPreferences.getInt("userId", 0) // null es el valor por defecto
 
-        val emptyMutableList: MutableList<Post> = mutableListOf()
-        postAdapter = PostAdapter(emptyMutableList, userId) // Inicializa con una lista vacía
+        // Inicializa el adaptador con la lista vacía
+        postAdapter = PostAdapter(postList, userId)
         recyclerView.adapter = postAdapter
-
         // Cargar álbumes desde el servidor
-        getPosts(binding)
+        getPosts()
 
     }
 
@@ -55,7 +54,8 @@ class HomeFragment : Fragment() {
         _binding = null
     }
     //OBTENER POSTS
-    private fun getPosts(binding: FragmentHomeBinding) {
+    // Obtener los posts y actualizar la lista existente
+    private fun getPosts() {
         val service: Service = RestEngine.getRestEngine().create(Service::class.java)
         val result: Call<List<Post>> = service.getPosts()
 
@@ -66,12 +66,20 @@ class HomeFragment : Fragment() {
 
             override fun onResponse(call: Call<List<Post>>, response: Response<List<Post>>) {
                 val posts = response.body() ?: emptyList()
-                val filteredPosts = posts.filter { it.status == 1 } // Filtra los posts con status activo
-                postAdapter = PostAdapter(filteredPosts.toMutableList(), userId) // Actualiza el adaptador con los posts cargados
-                binding.recyclerViewHome.adapter = postAdapter // Asigna el adaptador al RecyclerView
+                val filteredPosts = posts.filter { it.status == 1 }
+
+                // Actualiza la lista y notifica al adaptador
+                postList.clear() // Limpia la lista existente
+                postList.addAll(filteredPosts) // Agrega los nuevos datos
+                postAdapter.notifyDataSetChanged() // Notifica al adaptador que los datos han cambiado
+
                 Toast.makeText(requireContext(), "Posts cargados", Toast.LENGTH_LONG).show()
             }
         })
     }
 
+    override fun onResume() {
+        super.onResume()
+        getPosts()
+    }
 }

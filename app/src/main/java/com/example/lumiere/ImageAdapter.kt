@@ -25,8 +25,12 @@ class ImageSliderAdapter(private val images: List<String>) : RecyclerView.Adapte
     }
 
     override fun onBindViewHolder(holder: ImageViewHolder, position: Int) {
+        var imageBase64 = images[position]  // Aquí tomamos la imagen en base64 de la lista
 
-        val imageBase64 = images[position]  // Aquí tomamos la imagen en base64 de la lista
+        // Eliminar la cabecera "data:image/jpeg;base64," si está presente
+        if (imageBase64.startsWith("data:image/jpeg;base64,")) {
+            imageBase64 = imageBase64.replace("data:image/jpeg;base64,", "")
+        }
 
         // Decodificar la cadena base64 a un Bitmap
         try {

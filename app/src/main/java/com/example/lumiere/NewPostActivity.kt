@@ -107,7 +107,6 @@ class NewPostActivity : AppCompatActivity() {
                 // Convertir el ByteArray a una cadena Base64 en cada uno de los elementos de imgArray
                 val encodedImages = imgArray
 
-
                 val selectedPosition = binding.spinner2.selectedItemPosition
                 val selectedCategoryId = categoryArray.getOrNull(selectedPosition)?.id ?: 0
                 //SE CONSTRUYE EL OBJECTO A ENVIAR,  ESTO DEPENDE DE COMO CONSTRUYAS EL SERVICIO
@@ -136,7 +135,6 @@ class NewPostActivity : AppCompatActivity() {
                         //Toast.makeText(this@SaveAlbumActivity,"OK", Toast.LENGTH_LONG).show()
                         if (status == 2) { // Si es un borrador
                             album.id = postrb?.postId ?: 0
-                            //fetchDraftsFromDatabase(userId) // Actualiza el array de borradores
                             loadDraftsFromSharedPreferences()
                             draftsArray.add(album)
                             // Guarda los borradores en SharedPreferences
@@ -183,10 +181,7 @@ class NewPostActivity : AppCompatActivity() {
 
             //agregar el post al array de borradores
             // Si no hay internet, guardar el post como borrador
-            val encodedImages = imgArray.map { img ->
-                "data:image/png;base64," + Base64.getEncoder().encodeToString(img.toByteArray())
-            }
-
+            val encodedImages = imgArray
 
             val selectedPosition = binding.spinner2.selectedItemPosition
             val selectedCategoryId = categoryArray.getOrNull(selectedPosition)?.id ?: 0
@@ -196,7 +191,7 @@ class NewPostActivity : AppCompatActivity() {
                 selectedCategoryId,
                 "",
                 binding.titleETNewPost.text.toString(),
-                status,
+                2,
                 "",
                 "",
                 encodedImages

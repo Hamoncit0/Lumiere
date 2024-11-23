@@ -56,6 +56,7 @@ class EditPostActivity : AppCompatActivity() {
         binding.addPictureBtnNP.setOnClickListener {
             val intent = Intent(Intent.ACTION_PICK)
             intent.type = "image/*"
+            intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
             startActivityForResult(intent, EditPostActivity.PICK_IMAGES_REQUEST)
         }
 
@@ -79,7 +80,13 @@ class EditPostActivity : AppCompatActivity() {
                 }
             }
 
-            val strImage = post.image?.replace("data:image/png;base64,", "")
+
+            if (post.image?.startsWith("data:image/jpeg;base64,") ?: false) {
+                post.image = post.image?.replace("data:image/jpeg;base64,", "")
+            }
+
+            var strImage = post.image?.replace("data:image/jpeg;base64,", "")
+            strImage = post.image?.replace("data:image/png;base64,", "")
             val bitmaps = mutableListOf<Bitmap>()
 
             // Primero, si hay una imagen principal (no en array) en el objeto `post`
@@ -341,6 +348,13 @@ class EditPostActivity : AppCompatActivity() {
     // Constante para identificar la solicitud de selección de imagen
     companion object {
         const val PICK_IMAGES_REQUEST = 2
+    }
+
+    private fun cleanBase64Prefix(base64String: String): String {
+        return base64String
+            .replace("data:image/jpeg;base64,", "")
+            .replace("data:image/png;base64,", "")
+            .replace("data:image/jpg;base64,", "")
     }
 
 }

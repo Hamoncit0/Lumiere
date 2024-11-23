@@ -106,6 +106,13 @@ class EditAccountActivity : AppCompatActivity() {
             override fun onResponse(call: Call<UserRB>, response: Response<UserRB>) {
                 //Toast.makeText(this@SignupActivity,"OK", Toast.LENGTH_LONG).show()
 
+                val sharedPreferences = getSharedPreferences("USER_PREF", MODE_PRIVATE)
+                val editor = sharedPreferences.edit()
+                editor.putString("username", binding.editTextUserName.text.toString())
+                editor.putString("profilePicture", strEncodeImage)
+                editor.apply()
+
+
                 // Inflar el layout del diálogo usando binding
                 val dialogBinding = DialogSuccessBinding.inflate(layoutInflater)
 

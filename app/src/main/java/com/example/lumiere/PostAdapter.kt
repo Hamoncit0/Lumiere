@@ -50,7 +50,7 @@ class PostAdapter (private val posts : MutableList<Post>, private val currentUse
 
         // Mostrar el slider de imágenes solo si el post tiene más de una imagen
         if (item.images.isNotEmpty()) {
-            // Aquí la lista de imágenes ahora es una lista de URLs o base64
+            // Aquí la lista de imágenes ahora es una lista de base64
             val imageUrls = item.images  // Ya no necesitas mapear a 'it.image' porque son simples Strings
             val imageAdapter = ImageSliderAdapter(imageUrls)  // Asegúrate que tu ImageSliderAdapter acepta una lista de Strings
             holder.viewPager.adapter = imageAdapter
@@ -61,7 +61,12 @@ class PostAdapter (private val posts : MutableList<Post>, private val currentUse
         // Mostrar botón solo si el usuario es el mismo
         if (item.user_id == currentUser) {
             holder.deleteButton.visibility = View.VISIBLE
-            holder.editButton.visibility = View.VISIBLE
+            if(item.status == 1){
+                holder.editButton.visibility = View.VISIBLE
+            }else{
+                holder.editButton.visibility = View.GONE
+
+            }
         } else {
             holder.deleteButton.visibility = View.GONE
             holder.editButton.visibility = View.GONE

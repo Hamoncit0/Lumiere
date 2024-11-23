@@ -21,7 +21,8 @@ class RestEngine {
 
             val client =  OkHttpClient.Builder().addInterceptor(interceptor).build()
             val retrofit =  Retrofit.Builder()
-                .baseUrl("http://192.168.1.106:8081/api/") // tu url
+                //.baseUrl("http://192.168.1.106:8081/api/") // tu url
+                .baseUrl("https://lumiere-server-production.up.railway.app/api/") // tu url
                 .addConverterFactory(GsonConverterFactory.create())
                 .client(client)
                 .build()
